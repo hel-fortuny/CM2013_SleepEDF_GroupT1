@@ -19,7 +19,6 @@
 
 **Source.** https://physionet.org/content/sleep-edfx/1.0.0/
 
-## Measured on real data (validated)
 Sleep-Cassette subset: **4 subjects × 2 nights = 8 nights** (22,240 epochs after the R&K→AASM merge),
 resampled to 100 Hz. Supplied RF baseline, **leave-one-subject-out** (leakage-guarded):
 
