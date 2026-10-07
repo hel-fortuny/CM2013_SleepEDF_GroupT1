@@ -30,7 +30,7 @@ spread is half a result.
 | # | Date | What changed & why (one line) | Primary metric **with spread** | Better than previous? | If not — why it was kept | Commit |
 |---|---|---|---|---|---|---|
 | 1 | 2026-09-29 | *e.g.* supplied baseline, unchanged — establish the floor | mean κ 0.41 (sd 0.09, range 0.29–0.55 across 6 subjects) | — (baseline) | — | `a1b2c3d` |
-| 1 | 2026-10-05 | Supplied baseline, unchanged — establish baseline performance on 5 subjects,smoke data | mean κ 0.614 (sd 0.314, range 0.137–0.933 across 5 subjects) | — (baseline) | — | <commit> |
+| 1 | 2026-10-05 | Supplied baseline, unchanged — establish baseline performance on 5 subjects,smoke data | mean κ 0.614 (sd 0.314, range 0.137–0.933 across 5 subjects) | — (baseline) | — | `d26c256` |
 | 2 |  |  |  | yes / no |  |  |
 | 3 |  |  |  | yes / no |  |  |
 | 4 |  |  |  | yes / no |  |  |
