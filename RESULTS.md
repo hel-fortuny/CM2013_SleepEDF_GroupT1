@@ -31,7 +31,7 @@ spread is half a result.
 |---|---|---|---|---|---|---|
 | 1 | 2026-09-29 | *e.g.* supplied baseline, unchanged — establish the floor | mean κ 0.41 (sd 0.09, range 0.29–0.55 across 6 subjects) | — (baseline) | — | `a1b2c3d` |
 | 1 | 2026-10-05 | Supplied baseline, unchanged — establish baseline performance on 5 subjects,smoke data | mean κ 0.614 (sd 0.314, range 0.137–0.933 across 5 subjects) | — (baseline) | — | `d26c256` |
-| 2 |  |  |  | yes / no |  |  |
+| 2 | 2026-10-21  | Supplied baseline unchanged; evaluated on real Sleep-EDF data using LOSO (4 subjects, 8 recordings) | mean κ 0.810 (sd 0.046, range 0.753–0.856 across 4 subjects) | Not directly comparable | Establishes real-data baseline for future experiments | Pending |
 | 3 |  |  |  | yes / no |  |  |
 | 4 |  |  |  | yes / no |  |  |
 
