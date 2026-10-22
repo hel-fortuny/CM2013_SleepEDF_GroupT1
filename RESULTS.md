@@ -1,139 +1,150 @@
-# Results log — `<your track>`, `<your team>`
+# Results log — Sleep-EDF, Team T1
 
-> **Copy this file into YOUR team's project repository** (not this scaffold repo) as
-> `RESULTS.md`, and add one row per iteration as you go — not the night before the deadline.
-> It exists because Chapter 16 §16.3 defines an iteration as *done* only when it (1) runs end
-> to end to a result, (2) reports the primary metric **with its spread**, (3) is committed with
-> a note saying what changed and why, and (4) is at least as good as the previous iteration —
-> **or** says in writing why the change was kept anyway. This table is where (2), (3) and (4)
-> land; `git log` is where (1) becomes checkable. It also makes writing the report an assembly
-> job rather than an archaeology project.
->
-> **This file is graded.** `CAPSTONE_REPORT_RUBRIC.md` **Criterion 9 — Iteration & revision
-> history (3 pts)** takes `RESULTS.md` as its evidence, and it asks for one specific thing that
-> a forward-only log cannot show: **at least one earlier decision you went back and changed
-> because of a downstream result**, with the symptom that sent you back named. A row that
-> *lowered* the headline metric and was kept for a stated reason is full-marks evidence, not a
-> weakness. Rows here are also direct evidence for "Reproducibility & engineering" and "Report
-> quality & defence".
-
-**Track:** `<sleep_edf | ecg_cinc2017 | har | ctg_ctu_uhb | emg_ninapro | bci_eegmmidb>` ·
-**Split unit:** `<subject | record | recording>` · **Primary metric:** `<Cohen's κ | macro-F1>` ·
-**Evaluation mode(s):** `<new-subject | within-subject + new-subject>`
+**Track:** sleep_edf  
+**Split unit:** subject  
+**Primary metric:** Cohen's kappa  
+**Evaluation mode:** new-subject  
+**Team:** Vicente Soares, Helena Fortuny, Dalya Yousif
 
 ## Iteration log
 
-Paste the metric straight from the harness — `rep["summary"]` prints the required shape, e.g.
-`mean cohens_kappa 0.61 (sd 0.12, range 0.34-0.73 across 8 subjects)`. A pooled number with no
-spread is half a result.
-
-| # | Date | What changed & why (one line) | Primary metric **with spread** | Better than previous? | If not — why it was kept | Commit |
+| # | Date | What changed and why | Primary metric with spread | Better than previous? | Decision | Code revision |
 |---|---|---|---|---|---|---|
-| 1 | 2026-09-29 | *e.g.* supplied baseline, unchanged — establish the floor | mean κ 0.41 (sd 0.09, range 0.29–0.55 across 6 subjects) | — (baseline) | — | `a1b2c3d` |
-| 1 | 2026-10-05 | Supplied baseline, unchanged — establish baseline performance on 5 subjects,smoke data | mean κ 0.614 (sd 0.314, range 0.137–0.933 across 5 subjects) | — (baseline) | — | `d26c256` |
-| 2 | 2026-10-21  | Supplied baseline unchanged; evaluated on real Sleep-EDF data using LOSO (4 subjects, 8 recordings) | mean κ 0.810 (sd 0.046, range 0.753–0.856 across 4 subjects) | Not directly comparable | Establishes real-data baseline for future experiments | 82c4d85 |
-| 3 |  |  |  | yes / no |  |  |
-| 4 |  |  |  | yes / no |  |  |
+| 1 | 2026-10-22 | Ran the supplied baseline on real Sleep-EDF recordings from three subjects, without changing preprocessing, features or classification, to establish an initial reference. | Mean subject kappa 0.720 (SD 0.119; range 0.589–0.822; 3 subjects / 3 LOSO folds). | Initial real-data baseline. | Retain as the reference for this three-subject cohort; establish a larger development cohort before substantive model selection. | Course source: `5949b723bbd34d172f072446dfcb802ef54b49f7`. Team notebook/log commit has not yet been recorded. |
 
-*"Better" means better under the same honest harness — same split unit, same evaluation mode,
-same seed. A change that lowers the metric can still be the right call (simpler, faster, more
-robust across subjects, removes a leak). Say so in the column instead of quietly reverting it:
-"kept — κ fell 0.02 but the worst-subject κ rose from 0.18 to 0.31" is a stronger result than a
-silent higher mean.*
+The code revision above identifies the instructor's source used in Colab. It is not the team's experiment commit. Add the team commit after saving the executed notebook and this log in the team repository.
 
-## ⚠️ Before you fill in many rows — the garden of forking paths
+## Iteration 1 — initial real-data baseline
 
-The harness guarantees that **no single run** leaks a subject. It cannot guarantee anything
-about the *sequence* of runs. Every row in the table above is scored on the **same**
-group-aware folds, and those are the same folds that produce the number you will report. Try
-twelve configurations against one held-out set and report the best, and the winner was chosen
-partly because it happens to suit *these particular subjects*. Its margin over the runner-up is
-optimistically biased, and nothing in the report will look wrong. This is a **selection effect**,
-not a leak — which is exactly why the leakage guard cannot catch it, and why it has to be
-handled by how you *plan* the work rather than by the code.
+### Purpose and run provenance
 
-It bites hardest here because the cohorts are small: a dozen comparisons on five or six subjects
-is a great deal of selection pressure on very little data.
+- Executed by Vicente in Google Colab on 2026-10-22.
+- Notebook: a personal copy of `notebooks/track_sleep_edf.ipynb`.
+- Course repository: https://github.com/farhad-abtahi/CM2013
+- Course revision: [5949b723bbd34d172f072446dfcb802ef54b49f7](https://github.com/farhad-abtahi/CM2013/tree/5949b723bbd34d172f072446dfcb802ef54b49f7).
+- A synthetic smoke test was completed before this run; synthetic results are excluded from the real-data comparison.
+- Goal: establish the unchanged real-data baseline and inspect class and subject variability.
+- No numerical performance prediction was recorded in this log before this initial run.
+- Values below are transcribed from the supplied Colab outputs, rounded to the precision printed by the notebook.
 
-Two defensible ways to handle it. **Say in the report which one you used** — Criterion 7 grades
-the quality of the comparison, and this is part of that quality:
+### Data and loading
 
-| approach | what you do | what it costs |
-|---|---|---|
-| **an explicit development set** | hold out a few groups *up front* as a DEV set; compare every design option on DEV only; run the chosen pipeline **once** on the untouched evaluation folds and report that | fewer groups serving each purpose — painful on these cohorts — and a noisier DEV estimate |
-| **a comparison budget** | decide in advance how many configurations you will compare (a handful, not a sweep), write them into this file **before** you run them, and report the count | you may miss a better option, and you have to resist re-opening the budget once you have seen the numbers — which is the whole discipline |
+- Dataset: Sleep-EDF Expanded, version 1.0.0, Sleep-Cassette recordings.
+- Download source: PhysioNet's official AWS mirror, selected by the course downloader.
+- Requested subject indices: `[0, 1, 2]`.
+- Loaded subjects: `SC400`, `SC401`, `SC402`.
+- Recordings: 6, with both nights from each subject.
+- Epoch duration: 30 seconds; default target sampling rate: 100 Hz.
+- Label mapping uses the supplied loader: old stages 3 and 4 are combined as N3; Movement/Unknown epochs are excluded.
+- No additional Wake cropping or epoch exclusion was introduced by the team.
+- Total retained epochs: **16,688**.
+- Features per epoch: **11**.
+- `track.assert_no_holdout(recs)` ran successfully.
+- This run contains only the three development subjects above; no hold-out prediction or scoring operation is part of this logged work.
 
-Either way, two habits that cost nothing:
+| Subject | PSG record IDs |
+|---|---|
+| SC400 | SC4001E0, SC4002E0 |
+| SC401 | SC4011E0, SC4012E0 |
+| SC402 | SC4021E0, SC4022E0 |
 
-- **Record the count.** "We compared 6 configurations" belongs in the report. A team that
-  compares six and says so is doing better science than one that compares twenty and shows a
-  longer table.
-- **Read a small margin as no margin.** If the difference between two options is smaller than
-  the spread across your subjects/folds, it is not a result. Say "no measurable difference; we
-  kept the simpler one" — that sentence earns marks, and claiming the 0.01 does not.
+| Reference stage | Epochs | Share, as printed |
+|---|---:|---:|
+| W | 11,340 | 68.0% |
+| N1 | 596 | 3.6% |
+| N2 | 2,792 | 16.7% |
+| N3 | 932 | 5.6% |
+| REM | 1,028 | 6.2% |
 
-**Related, and equally invisible: *where* your preprocessing is fitted.** The notebook builds
-features for every recording **before** `evaluate()` cuts the folds. That is safe for everything
-the scaffold ships, because all of it is **stateless** — a fixed filter, or a threshold estimated
-from one epoch's own samples. It stops being safe the moment you add a stage that **learns**:
-CSP, PCA/ICA, a cohort-wide z-score, a learned artifact template. Fit one of those over all the
-recordings and every held-out subject has already shaped the transform that built the training
-features — and `assert_no_subject_leak` will still pass, because it checks group ids and cannot
-see what a filter was learned from. A learned stage must be fitted **inside** the fold: as a step
-in the classifier pipeline (cloned and refit per fold) or via `select_features()`. If you added
-one, record here which of the two you used.
+Percentages are rounded and may not sum to exactly 100%.
 
-## Decision log — the choices behind the numbers
+### Pipeline and validation
 
-Rows above say *what happened*; this says *what you chose and why*, which is what §16.4 asks you
-to make traceable and what the report's defence is built from. There is no single correct
-pipeline here — the scaffold deliberately ships options, not answers. One line per decision;
-add rows as the pipeline grows, and note the alternative you rejected.
+- Data mode: `USE_REAL = True`.
+- Track construction: `track = SleepEDFTrack()`, with no custom configuration.
+- Dataset construction: `X, y, groups = track.build_dataset(recs)`.
+- Evaluation: `rep = track.evaluate(X, y, groups)`.
+- Preprocessing and the 11 supplied features were unchanged. The default preprocessing is identity, and the default spectral estimator is Welch.
+- The supplied classifier and feature-selection settings were retained as the reference; no alternative configuration has been evaluated on this real-data cohort.
+- Protocol: leave-one-subject-out (LOSO), 3 folds. Each fold trains on two subjects and evaluates on the third.
+- Both nights of a subject stay in the same fold. The evaluation harness checks subject separation and fits selection/classifier steps within each training fold.
+- No team-added learned transformation was fitted across all recordings.
+- Raw data are kept under `/content/drive/MyDrive/CM2013_data/train`.
+- `load_cached()` was used for parsed recordings. Separate preprocessing/feature caches have not yet been configured.
 
-| Pipeline module | Option chosen | Alternative(s) considered | Why this one (one sentence) | Iteration | Revised later? |
-|---|---|---|---|---|---|
-| 1. Data loading | *e.g.* 8 subjects, both nights | more subjects, one night each | subject-level split needs both nights inside one group | 1 | — |
-| 2. Preprocessing |  |  |  |  |  |
-| 3. Feature extraction |  |  |  |  |  |
-| 4. Feature selection | *e.g.* `select="none"` | ANOVA `SelectKBest`, tree importances | 14 features vs. ~1 800 epochs — pruning risked more than it saved | 1 | *e.g.* **yes, iter 4** — `select_k=20` was a no-op (harness said so); switched to `k=6` |
-| 5. Classification, incl. `imbalance` | *e.g.* `imbalance="balanced"` | `"none"`, `"resample"`, `"threshold"` | *(if you kept the default, say you looked and why — a silent default earns nothing)* |  |  |
-| 6. Inference |  |  |  |  |  |
-| 7. Reporting |  |  |  |  |  |
+### Results
 
-## Revisions — the ones that went **backwards** (Criterion 9's actual evidence)
+| Metric | Value | Aggregation |
+|---|---:|---|
+| Cohen's kappa | 0.729 | Pooled out-of-fold predictions |
+| Macro-F1 | 0.622 | Pooled out-of-fold predictions |
+| Accuracy | 0.868 | Pooled out-of-fold predictions |
+| Mean Cohen's kappa | 0.720 | Unweighted mean across the 3 held-out subjects |
+| SD of Cohen's kappa | 0.119 | Across the 3 held-out subjects |
+| Minimum Cohen's kappa | 0.589 | Lowest subject score |
+| Maximum Cohen's kappa | 0.822 | Highest subject score |
 
-Adding iterations forward is a to-do list. What this section wants is the place a number
-downstream sent you back **up** the pipeline. One row is enough; two is a good project.
-The notebook's "Decision points on this track" section has a symptom → stage table to
-diagnose from.
+The pooled kappa (0.729) and the mean subject kappa (0.720) use different aggregations and must not be interchanged. In this three-fold LOSO run, each fold corresponds to one held-out subject.
 
-| # | The downstream result that triggered it | Which earlier decision it indicted | What you changed | What happened to the metric |
-|---|---|---|---|---|
-| 1 | *e.g.* worst-subject κ 0.14 vs. mean 0.61 | stage 2 — no per-recording normalisation | z-scored band powers within each recording | mean κ 0.61 → 0.59, **worst subject 0.14 → 0.38** — kept |
-| 2 |  |  |  |  |
+Exact harness summary:
 
-## Who did what
+```text
+mean cohens_kappa 0.720 (sd 0.119, range 0.589-0.822 across 3 subjects)
+```
 
-One line per person per iteration — the honest-disclosure requirement of §16.7, and the evidence
-`INDIVIDUAL_ASSESSMENT.md` asks for. The seven modules do **not** have to map one-to-one onto
-people: one person may own several modules, two people may share one, and ownership may rotate
-between iterations. Record what actually happened.
+The row-normalized confusion matrix was inspected in the notebook. The following recalls are approximate readings of its rounded diagonal, not exact exported per-class statistics:
 
-| Iteration | Who | Modules / tasks owned | Reviewed by |
+| Reference stage | Approximate recall |
+|---|---:|
+| W | 97% |
+| N1 | 20% |
+| N2 | 91% |
+| N3 | 34% |
+| REM | 54% |
+
+Observed errors in the rounded matrix:
+- N1: approximately 34% predicted as W and 34% as N2.
+- N3: approximately 35% predicted as W and 31% as N2.
+- REM: approximately 39% predicted as N2.
+
+### Interpretation and decision
+
+Wake represents about 68% of the epochs; predicting W for every epoch would therefore achieve about 68% accuracy. The baseline's 86.8% accuracy should be read alongside kappa, macro-F1 and per-stage recall. Performance is much stronger on W and N2 than on N1 and N3 in this cohort.
+
+This is an initial reference on only three subjects. It does not establish performance across the wider Sleep-EDF population. Class imbalance is an observed property; it has not been demonstrated to be the sole cause of the class errors.
+
+**Decision:** preserve this baseline and its cohort for traceability. Set the development cohort and comparison plan before testing model changes. A run on a larger cohort must receive a separate log entry; compare alternatives with a baseline evaluated on that same cohort.
+
+## Decision log
+
+| Module | Current choice | Rationale | Alternatives tested so far |
 |---|---|---|---|
-| 1 |  |  |  |
+| Loading | Three real subjects, both nights, persistent data and parsed cache | Initial check of the real-data pipeline and subject grouping | None |
+| Preprocessing | Supplied default, unchanged | Preserve the original reference | None |
+| Features | Supplied 11-feature set, unchanged | Preserve the original reference | None |
+| Feature selection / classification | Supplied defaults, fitted within folds by the harness | Measure baseline behavior before selecting alternatives | None |
+| Inference / reporting | LOSO out-of-fold predictions; pooled metrics and subject spread; row-normalized confusion matrix | Examine class errors and variability between subjects | None |
 
-## Final numbers (fill in once, at the end)
+## Revisions
 
-| | Value | Under what split |
-|---|---|---|
-| Primary metric, development (mean + spread) |  |  |
-| Secondary metrics (macro-F1 / balanced accuracy / per-class recall) |  |  |
-| Held-out set — **scored once, never tuned against** |  |  |
-| Supplied baseline, same harness |  |  |
-| Yardstick from the dataset card (human ceiling / benchmark / chance) |  |  |
-| **Configurations compared** before settling (a number) |  | on DEV folds / on the evaluation folds — say which |
-| How option comparison was kept separate from final reporting |  | *e.g.* "separate DEV groups" / "budget of 6, fixed in advance" |
+No earlier modeling decision has yet been revised following a later result. Record a genuine revision, its triggering observation and its measured effect when one occurs.
 
-*Grading: `CAPSTONE_REPORT_RUBRIC.md` (team, 30 pts) and `INDIVIDUAL_ASSESSMENT.md`
-(individual, 10 pts).*
+## Contributions recorded so far
+
+| Iteration | Person | Observed work | Review |
+|---|---|---|---|
+| 1 | Vicente Soares | Set up the Colab copy and persistent data folder; executed synthetic and real baseline cells; supplied metrics, class counts, confusion matrix and source revision. Setup and log preparation were assisted by ChatGPT. | Peer review not yet recorded. |
+
+Contributions from other team members will be added when their actual work is documented.
+
+## Next steps and missing evidence
+
+- Save the executed notebook and this log in the team repository and record the team commit.
+- Capture the runtime dependency versions and export exact per-subject/per-class results and the numerical confusion matrix.
+- Add versioned caching for slow per-recording steps before repeated experiments.
+- Define the development cohort and either a separate development set or a fixed comparison budget before testing alternatives.
+- Record future hypotheses before running each comparison.
+- Final pipeline selection, a genuine revised decision, EXPECTED_SCORE.md registration and final hold-out inference are still future stages.
+
+
+
