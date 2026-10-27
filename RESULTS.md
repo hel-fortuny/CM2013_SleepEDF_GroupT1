@@ -14,6 +14,7 @@
 | 2 (B0) | 2026-10-22 | Expanded the development cohort to eight subjects and reran the unchanged supplied baseline before testing alternatives. | Mean subject kappa 0.824 (SD 0.068; range 0.710–0.896; 8 subjects / 8 LOSO folds). | Not a controlled improvement over iteration 1: the cohort and training-set size changed. | Use as the reference for the fixed eight-subject comparison cohort. | Course source: `5949b723bbd34d172f072446dfcb802ef54b49f7`; personal notebook / team commit not yet recorded. |
 | 3 (F1) | 2026-10-22 | Replaced only the five absolute EEG band powers with per-epoch relative powers; retained the other six features and all evaluation settings. | Mean subject kappa 0.828 (SD 0.054; range 0.730–0.885; same 8 subjects / 8 LOSO folds). | Small observed gain vs B0: mean subject kappa +0.004; pooled macro-F1 +0.007, from rounded reported values. | Prefer F1 provisionally after paired/class inspection; keep the B0 reference and document the participant/REM trade-offs. | Course source unchanged; feature transformation supplied in the Colab cell; personal experiment commit not yet recorded. |
 | 4 (F2) | 2026-10-22 | Kept the 11 original features and appended only the five per-epoch relative EEG band powers, producing 16 features; same eight-subject evaluation and classifier configuration. | Mean subject kappa 0.837 (SD 0.052; range 0.758–0.897; 8 subjects / 8 LOSO folds). | Highest reported aggregate scores so far: mean subject kappa +0.009 and pooled macro-F1 +0.004 vs F1, from printed values. | Adopt F2 as the development working reference after paired/class/confusion inspection; retain the N1 trade-off. | Course source unchanged; combined-feature construction in Colab; personal experiment commit not yet recorded. |
+| 5 (C1) | 2026-10-27 | Cropped training nights to the first–last sleep-labelled epoch plus 30 minutes on each side; retained F2's 16 features and RF. Each held-out subject was evaluated on all original epochs. | Mean subject kappa 0.813 (SD 0.051; range 0.714–0.878; same 8 subjects / 8 LOSO folds). | Lower primary metric than F2 by 0.024; N1 F1 improves from 0.354 to 0.391, while pooled macro-F1 falls from 0.762 to 0.758. | Do not replace F2 with C1 under the declared primary metric. Preserve the minority-recall gains and precision/Wake trade-offs. | Course source unchanged; custom training-only crop/LOSO cell executed in Colab; personal experiment commit not yet recorded. |
 
 The code revision above identifies the instructor's source used in Colab. It is not the team's experiment commit. Add the team commit after saving the executed notebook and this log in the team repository.
 
@@ -335,7 +336,7 @@ mean cohens_kappa 0.837 (sd 0.052, range 0.758-0.897 across 8 subjects)
 
 **Decision after the inspection below:** adopt F2 as the development working reference. It has the highest mean subject kappa and pooled macro-F1 of the three configurations, improves 6/8 subjects versus F1, and improves N2/N3/REM F1 versus F1. Accept and record the smaller N1 F1 relative to F1 (0.354 versus 0.368), while noting it remains above B0 (0.331). Preserve B0 and F1 for traceability. This is a development choice on eight subjects, not final pipeline selection or a significance claim.
 
-**Current comparison budget:** 3 of at most 12 configurations evaluated: B0, F1 and F2. The earlier three-subject pilot remains separate. There are nine remaining configurations within the declared budget.
+**Budget at the end of F2:** 3 of at most 12 configurations evaluated: B0, F1 and F2. The earlier three-subject pilot remains separate. Nine configurations remained at this checkpoint; see C1 below for the current count.
 
 
 ### Paired subject and class inspection of F2
@@ -392,15 +393,152 @@ Rounding may prevent displayed rows from summing to 1, and 0.00 does not establi
 
 **Working choice:** use F2 for the next controlled development comparisons. First preserve exact out-of-fold reports and the current executed notebook; then consolidate the feature construction into a reusable extractor and add versioned per-recording caches before slower processing/feature experiments. Downloaded data and cache files remain outside git.
 
+## Team discussion and preservation checkpoint — 2026-10-27
+
+Vicente reported the team's first direction-setting meeting. Each member will develop an individual preprocessing/filtering/feature strategy before discussing the attempts together. Subject-level cross-validation and the instructor's ten fixed hold-out subjects remain the shared evaluation discipline. The team discussed signal-quality inspection by sampling recordings, the exclusion of Movement/Unknown by the loader, Wake imbalance, a possible training crop and possible minority resampling. These are discussion items, not claims that filtering or synthetic augmentation has been implemented. Direct comparisons between members require a common cohort and evaluation protocol.
+
+Vicente supplied the successful Colab save message for /content/drive/MyDrive/CM2013_data/experiments/features_B0_F1_F2.json. The uploaded executed notebook capstone_viggy(1).ipynb also contains this save output and the B0/F1/F2 cells and results. This confirms the reported export operation; the JSON bytes have not been uploaded here for independent numerical inspection. It does not confirm a team repository commit. That notebook snapshot predates the later label-audit and C1 cells executed through the conversation; save the current Colab notebook to preserve those additions.
+
+## Development label audit — before C1, 2026-10-27
+
+The following diagnostics use only SC400–SC407. They summarize reference labels and do not fit another classifier or consume another comparison configuration. The existing eight-subject counts remain W 30,588; N1 1,482; N2 7,263; N3 2,165; REM 2,805; total 44,303.
+
+### Per-subject stage percentages
+
+Transcribed from Vicente's displayed table, rounded to one decimal. Each subject combines both nights; rounding may prevent rows from summing to exactly 100%.
+
+| Subject | W (%) | N1 (%) | N2 (%) | N3 (%) | REM (%) |
+|---|---:|---:|---:|---:|---:|
+| SC400 | 70.9 | 2.1 | 11.4 | 9.4 | 6.2 |
+| SC401 | 65.1 | 3.6 | 21.6 | 3.6 | 6.1 |
+| SC402 | 68.0 | 5.0 | 17.0 | 3.8 | 6.2 |
+| SC403 | 71.4 | 1.9 | 15.9 | 3.4 | 7.3 |
+| SC404 | 61.7 | 5.7 | 21.2 | 2.7 | 8.7 |
+| SC405 | 73.1 | 2.9 | 15.1 | 4.5 | 4.5 |
+| SC406 | 72.8 | 2.6 | 14.7 | 4.7 | 5.2 |
+| SC407 | 69.2 | 3.1 | 14.2 | 6.9 | 6.6 |
+
+Wake is the majority for every subject (61.7–73.1%); N1 is uncommon for every subject (1.9–5.7%). Imbalance is shared across the cohort. These proportions alone do not establish the cause of N1 errors or identify signal artifacts. The existing classifier already uses class_weight="balanced", fitted separately in each training fold.
+
+### Where the Wake epochs occur
+
+For each night, locate the first and last retained epoch labelled N1/N2/N3/REM. Count Wake before the first, after the last, and between them. Minutes below sum retained 30-second epochs after Movement/Unknown exclusion; they are not reconstructed elapsed EDF timestamps or independently measured lights-off times. No epochs were removed by this diagnostic.
+
+| Recording | Total W (min) | Initial W (min) | Final W (min) | W between sleep endpoints (min) |
+|---|---:|---:|---:|---:|
+| SC4001E0 | 998.5 | 510.5 | 454.0 | 34.0 |
+| SC4002E0 | 942.5 | 434.5 | 476.5 | 31.5 |
+| SC4011E0 | 928.0 | 359.0 | 550.5 | 18.5 |
+| SC4012E0 | 912.0 | 321.5 | 569.5 | 21.0 |
+| SC4021E0 | 953.5 | 364.5 | 585.0 | 4.0 |
+| SC4022E0 | 935.5 | 378.5 | 554.5 | 2.5 |
+| SC4031E0 | 1004.0 | 435.5 | 558.5 | 10.0 |
+| SC4032E0 | 978.5 | 460.5 | 510.0 | 8.0 |
+| SC4041E0 | 767.0 | 406.0 | 321.0 | 40.0 |
+| SC4042E0 | 886.5 | 537.0 | 317.0 | 32.5 |
+| SC4051E0 | 1129.0 | 644.5 | 440.5 | 44.0 |
+| SC4052E0 | 890.0 | 540.5 | 298.5 | 51.0 |
+| SC4061E0 | 1034.5 | 467.5 | 556.0 | 11.0 |
+| SC4062E0 | 1003.5 | 423.5 | 543.5 | 36.5 |
+| SC4071E0 | 979.0 | 466.5 | 510.5 | 2.0 |
+| SC4072E0 | 952.0 | 320.0 | 488.5 | 143.5 |
+
+Summing these displayed half-minute values gives 15,294 minutes of Wake: 14,804 at the two ends and 490 between the first/last sleep-labelled epochs. Thus 96.8% of retained Wake duration lies at the ends. A first-to-last sleep window with 30 retained minutes on either side would retain 16,615 epochs across the eight-subject pool, including all 13,715 sleep epochs and 2,900 Wake epochs (17.45% of the cropped pool), removing 27,688 Wake epochs. These are arithmetic summaries of the audit, not a changed evaluation set. Each actual C1 fold crops only its seven training subjects.
+
+## Iteration 5 (C1) — training-only sleep-window crop, 30-minute margins
+
+**Status: executed by Vicente on 2026-10-27; aggregate/spread and full class report supplied. F2 remains the development working reference. Paired subject scores and C1 confusion inspection remain pending.**
+
+### Predeclared hypothesis and controls
+
+The label audit motivated testing whether reducing long Wake stretches in training would improve recognition of minority stages. The stated risk was worse Wake recognition. The margin was fixed at 30 minutes before viewing C1 results; no margin search has been run. This is a training-sample selection experiment. Signal filtering and feature extraction are unchanged.
+
+- Same eight development subjects, both nights; none belongs to the published hold-out set.
+- Features: unchanged F2 matrix X8_comb, 16 columns; original features plus five relative EEG powers.
+- Same default StandardScaler → RF with 200 trees, balanced class weights and seed 0; a fresh pipeline is fitted in every fold.
+- Eight-fold LeaveOneGroupOut on subjects. Both nights of each subject remain together.
+- Within each fold, reference labels are used to locate the crop endpoints only for training subjects. Keep the first-to-last sleep-labelled interval plus 30 minutes on either side, clamped to the recording boundaries. Preserve any Wake within that interval.
+- The loaded arrays contain only retained epochs, so the margin is 60 retained epochs at 30 seconds each. Exact elapsed-time margins would require original timestamps; that change has not been implemented.
+- The test indices remain complete: all 44,303 original development epochs receive out-of-fold predictions. Test/hold-out labels are not used to determine an inference crop.
+- The Colab cell checked feature/label/group alignment before fitting. Its custom LOSO loop applies the mask only to training indices, predicts the full held-out subject and uses the course _make_report helper to retain the same metric/spread schema.
+- No new synthetic samples, learned feature selection, signal filters or hold-out operations are introduced.
+
+Reported training sizes, in the LOSO subject order:
+
+| Fold | Held-out subject | Training epochs after crop |
+|---|---|---:|
+| 1 | SC400 | 14,647 |
+| 2 | SC401 | 14,326 |
+| 3 | SC402 | 14,581 |
+| 4 | SC403 | 14,752 |
+| 5 | SC404 | 14,180 |
+| 6 | SC405 | 14,697 |
+| 7 | SC406 | 14,756 |
+| 8 | SC407 | 14,366 |
+
+Their sum is 116,305 = 7 × 16,615, consistent with every cropped subject appearing in seven training folds. This is an arithmetic consistency check; the models were run in Vicente's Colab, not rerun here.
+
+### Reported C1 results
+
+All values below are transcribed from the supplied outputs at three-decimal precision. Differences use those rounded values.
+
+| Metric | F2: full training | C1: cropped training | C1 minus F2 |
+|---|---:|---:|---:|
+| Mean subject kappa | 0.837 | 0.813 | -0.024 |
+| SD of subject kappa | 0.052 | 0.051 | -0.001 |
+| Minimum subject kappa | 0.758 | 0.714 | -0.044 |
+| Maximum subject kappa | 0.897 | 0.878 | -0.019 |
+| Pooled kappa | 0.837 | 0.813 | -0.024 |
+| Pooled macro-F1 | 0.762 | 0.758 | -0.004 |
+| Pooled accuracy | 0.922 | 0.906 | -0.016 |
+
+C1 pooled balanced accuracy is 0.771. F2's exact balanced-accuracy value has not been supplied separately; its displayed macro-average recall was 0.743. Balanced accuracy gives equal weight to stage recalls, whereas macro-F1 also depends on stage precision.
+
+Exact printed C1 summary:
+
+~~~text
+mean cohens_kappa 0.813 (sd 0.051, range 0.714-0.878 across 8 subjects)
+~~~
+
+**C1 pooled class report, on the complete evaluation set**
+
+| Stage | Precision | Recall | F1 | Support |
+|---|---:|---:|---:|---:|
+| W | 0.976 | 0.949 | 0.962 | 30,588 |
+| N1 | 0.407 | 0.377 | 0.391 | 1,482 |
+| N2 | 0.833 | 0.894 | 0.863 | 7,263 |
+| N3 | 0.768 | 0.814 | 0.790 | 2,165 |
+| REM | 0.744 | 0.824 | 0.782 | 2,805 |
+
+| Aggregate | Precision | Recall | F1 | Support |
+|---|---:|---:|---:|---:|
+| Macro average | 0.746 | 0.771 | 0.758 | 44,303 |
+| Support-weighted average | 0.909 | 0.906 | 0.907 | 44,303 |
+
+Pooled accuracy is 0.906.
+
+### Interpretation and decision
+
+The predicted minority-recall benefit is partly observed. N1 recall rises from 0.271 to 0.377 (+10.6 percentage points) and N1 F1 from 0.354 to 0.391 (+0.037). Its precision falls from 0.511 to 0.407, so more actual N1 is detected alongside more false N1 predictions. N3 recall rises from 0.760 to 0.814 (+5.4 points), but its precision falls from 0.874 to 0.768 and F1 from 0.813 to 0.790. Higher recall alone is therefore not sufficient evidence of a better stage classifier.
+
+Recall rises for every sleep stage and falls for Wake (0.984 → 0.949, -3.5 points). Precision falls for every sleep stage and rises for Wake. This pattern is consistent with a shift toward predicting sleep stages more often after the training selection changes; the confusion matrix is needed to locate specific changed errors. N1 is the only stage whose F1 improves; Wake, N2, N3 and REM F1 all decrease. Class weighting remains enabled in both runs, with weights recomputed from the training data provided to each fold.
+
+Mean subject kappa falls by 0.024 and pooled macro-F1 by 0.004 on the same complete evaluation set. The similar between-subject SD is not a confidence interval for the difference, and the new extrema do not identify paired individual changes. No significance claim is made.
+
+**Decision:** retain F2 as the working reference under the predeclared primary metric; do not adopt C1 as an overall improvement. Preserve C1 as the first fixed-cohort alternative that underperforms on both primary mean kappa and pooled macro-F1, with a useful N1 trade-off. This result does not establish that every cropping strategy fails. Do not replace the complete evaluation set with a cropped test set to obtain a more favourable comparison. Next inspect paired subject differences and the C1 confusion matrix from these existing predictions, export the exact report and preserve the executed notebook; no retraining is required for that inspection.
+
+**Current comparison budget:** 4 of at most 12 configurations evaluated: B0, F1, F2 and C1. Eight remain. The three-subject pilot and label diagnostics remain outside this count. The team's final pipeline, final-model commit and EXPECTED_SCORE.md registration remain future work.
+
 ## Decision log
 
 | Module | Current choice | Rationale | Alternatives tested so far |
 |---|---|---|---|
 | Loading | Eight fixed development subjects, both nights, persistent data and parsed cache | Establish a common comparison cohort; three-subject pilot retained separately | Cohort expansion only; not a pipeline comparison |
-| Preprocessing | Supplied default, unchanged | Preserve the original reference | None |
+| Preprocessing / filtering | Supplied identity transform, unchanged | A broader training-night noise audit is still needed before choosing signal filters | No signal-filter alternative evaluated yet |
+| Training epoch selection | All retained epochs, as in F2 | C1 improves N1 F1 but lowers the declared primary mean kappa and pooled macro-F1 on the complete evaluation set | C1: first–last sleep plus 30-minute margins in training only; not adopted |
 | Features | F2: 11 original features plus 5 relative EEG powers, 16 total | Highest current mean subject kappa and macro-F1; 6/8 subjects improve vs F1; accept the documented N1 loss vs F1 while retaining improvement over B0 | B0, F1 and F2 evaluated and inspected; F2 adopted for development |
 | Feature selection / classification | Supplied defaults, fitted within folds by the harness | Measure baseline behavior before selecting alternatives | None |
-| Inference / reporting | Eight-subject LOSO aggregate, paired and class reports recorded for all three; F2 row-normalized confusion figure inspected; exact numerical/night exports pending | Compare alternatives on identical subjects and report both gains and losses | B0/F1/F2 inspected; exact report archive remains to be confirmed |
+| Inference / reporting | Complete-epoch eight-subject LOSO retained for B0/F1/F2/C1; C1 aggregate and class report recorded, paired/confusion inspection pending | Preserve evaluation coverage while comparing training strategies and report gains as well as losses | B0/F1/F2 JSON save confirmed; C1 exact export and per-record night reporting pending |
 
 ## Revisions
 
@@ -414,15 +552,16 @@ On 2026-10-22 the provisional **F1 relative-only band-power choice was revisited
 | 2 / inspection | Vicente Soares | Executed diagnostic plots for three development participants, expanded the cohort to eight subjects, reran the unchanged baseline and supplied its metrics. Setup, interpretation and log preparation were assisted by ChatGPT. | Peer review not yet recorded. |
 | 3 (F1) | Vicente Soares | Executed the predeclared relative-band-power comparison and supplied aggregate metrics, paired subject kappas and both per-class reports. Code, interpretation and log preparation were assisted by ChatGPT. | Peer review not yet recorded. |
 | 4 (F2) | Vicente Soares | Executed the predeclared combined absolute/relative feature comparison and supplied the confirmed 16-feature count, aggregate scores, paired subject table, class report and confusion figure. Code, interpretation and log preparation were assisted by ChatGPT. | Peer review not yet recorded. |
+| 5 (C1) / label audit | Vicente Soares | Reported the team's direction-setting meeting; confirmed the B0/F1/F2 JSON save; supplied per-subject stage proportions and per-night Wake endpoint counts; executed the predeclared training-only crop and supplied fold sizes, aggregate/spread and class reports. Code, arithmetic, interpretation and log preparation were assisted by ChatGPT. | Strategy discussion occurred; peer review of C1 results not yet recorded. |
 
 Contributions from other team members will be added when their actual work is documented.
 
 ## Next steps and missing evidence
 
 - Save the executed notebook and this log in the team repository and record the team commit.
-- Export numerical confusion matrices and exact prediction arrays for B0, F1 and F2, plus per-record night reports. Rounded paired and per-class panels are now recorded above; current runtime versions are also recorded.
+- B0/F1/F2 exact-report JSON save is confirmed in Colab. Export the C1 report and preserve the updated executed notebook; inspect paired C1/F2 scores and C1 confusion from existing predictions. Per-record night reports and independent inspection of the exported JSON files remain pending.
 - Add versioned caching for slow per-recording steps before repeated experiments.
-- Keep the declared eight-subject cohort and maximum 12-configuration budget fixed during comparisons; record any justified protocol revision before implementing it.
-- Consolidate F2 as a reusable feature extractor for the next controlled comparisons. Preserve exact reports and the current executed notebook first; numerical exports and the integration checkpoint have not yet been confirmed. Record future hypotheses before later comparisons.
+- Keep the declared eight-subject cohort and maximum 12-configuration budget fixed during comparisons; four configurations have been evaluated and eight remain. Record any justified protocol revision before implementing it.
+- Consolidate F2 as a reusable feature extractor before later processing/feature comparisons, then add versioned per-recording caches. Integration is not yet implemented. Extend the noise audit across development nights using representative and flagged epochs before selecting a signal filter. Record future hypotheses before later comparisons.
 - A revised provisional feature decision is documented above. Final team pipeline selection, EXPECTED_SCORE.md registration and final hold-out inference are still future stages.
 
