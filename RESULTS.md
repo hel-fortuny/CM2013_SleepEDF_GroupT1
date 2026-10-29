@@ -4,7 +4,25 @@
 **Split unit:** subject  
 **Primary metric:** Cohen's kappa  
 **Evaluation mode:** new-subject  
-**Team:** Vicente Soares, Helena Fortuny, Dalya Yousif
+**Team:** Vicente Soares, Helena Fortuny, Dalya Yousif  
+**Last updated:** 2026-10-29
+
+## Current checkpoint — 2026-10-29
+
+This file preserves the historical pilot and eight-subject experiments, then records Vicente's new 68-subject comparisons. Statements inside older iteration sections describe their checkpoint, not the current project scope.
+
+| Phase | Evaluation | Completed configurations | Working reference |
+|---|---|---|---|
+| Earlier exploration | SC400–SC407; 8 subject-wise LOSO folds | B0, F1, F2, C1, P1 | Historical eight-subject F2 result |
+| Active development | 68 subjects / 133 recordings; fixed subject folds A–E | B0_68 and F2_68 | **F2_68: mean fold kappa 0.735 ± 0.017** |
+
+- Active evaluation set: **360,621 valid epochs**, including Wake. The published ten-subject final holdout remains unused.
+- Current features: 11 original descriptors plus five relative EEG powers, 16 total. No added signal filter or training crop has been evaluated on the 68-subject cohort.
+- The newer kappa SDs describe **five folds**, each containing 13–14 test subjects. They are not the SD across 68 individual subjects or confidence intervals.
+- Earlier eight-subject scores and newer 68-subject scores use different cohorts and validation partitions; they are not a controlled pipeline comparison.
+- The eight-subject M1 logistic-regression proposal remains **unexecuted and postponed**. The active next method-development step is signal/spectrum inspection before selecting filters.
+- Per-fold B0_68 and F2_68 results have been produced by the saving evaluation loops. **The latest consolidated F2 JSON/PNG export cell has not yet been executed at this update.** B0's consolidated-export execution was not separately confirmed.
+- Save the executed notebook and this log in the team repository and record the actual experiment commit. The pinned course source SHA is not the team's model commit.
 
 ## Iteration log
 
@@ -16,6 +34,8 @@
 | 4 (F2) | 2026-10-22 | Kept the 11 original features and appended only the five per-epoch relative EEG band powers, producing 16 features; same eight-subject evaluation and classifier configuration. | Mean subject kappa 0.837 (SD 0.052; range 0.758–0.897; 8 subjects / 8 LOSO folds). | Highest reported aggregate scores so far: mean subject kappa +0.009 and pooled macro-F1 +0.004 vs F1, from printed values. | Adopt F2 as the development working reference after paired/class/confusion inspection; retain the N1 trade-off. | Course source unchanged; combined-feature construction in Colab; personal experiment commit not yet recorded. |
 | 5 (C1) | 2026-10-27 | Cropped training nights to the first–last sleep-labelled epoch plus 30 minutes on each side; retained F2's 16 features and RF. Each held-out subject was evaluated on all original epochs. | Mean subject kappa 0.813 (SD 0.051; range 0.714–0.878; same 8 subjects / 8 LOSO folds). | Lower primary metric than F2 by 0.024; N1 F1 improves from 0.354 to 0.391, while pooled macro-F1 falls from 0.762 to 0.758. | Do not replace F2 with C1 under the declared primary metric. Preserve the minority-recall gains and precision/Wake trade-offs. | Course source unchanged; custom training-only crop/LOSO cell executed in Colab; personal experiment commit not yet recorded. |
 | 6 (P1) | 2026-10-27 | Added EEG-only Butterworth low-pass (single-pass order 4, Wn=35 Hz, forward-backward SOS, odd padding per epoch); recomputed F2's 16 features, retaining all epochs, the same LOSO folds and classifier. | Mean subject kappa 0.833 (SD 0.054; range 0.749–0.895; same 8 subjects / 8 LOSO folds). | Small observed loss vs F2: mean subject kappa -0.004 and pooled macro-F1 -0.005; seven subjects worsen and one improves. | Retain F2 after aggregate, class, paired subject and confusion review; P1 increases the displayed N1-to-W confusion. | Course source unchanged; reusable feature helper, versioned per-recording caches and P1 evaluation executed in Colab; P1 JSON save confirmed; personal experiment commit not yet recorded. |
+| 7 (B0_68) | 2026-10-29 | Established the original 11-feature baseline on all 68 development subjects using the explicitly defined A–E folds, complete test recordings and per-recording feature caches. | Mean fold kappa **0.728** (sample SD **0.012**; 5 folds / 68 subjects). Pooled kappa 0.728; macro-F1 0.651. | New-cohort reference; not directly comparable with the earlier eight-subject scores. | Retain as the common A–E baseline for subsequent 68-subject strategies. | Course source unchanged; custom fixed-fold evaluator and executed notebook cells; team experiment commit not yet recorded. |
+| 8 (F2_68) | 2026-10-29 | Appended five per-epoch relative EEG powers to the cached original 11 features; same 68 subjects, 360,621 test epochs, A–E folds and classifier settings. | Mean fold kappa **0.735** (sample SD **0.017**; same 5 folds). Pooled kappa 0.735; macro-F1 0.659. | Kappa rises in 5/5 folds; mean gain about 0.007. All five pooled stage F1 scores rise; N1 gain is small. | Adopt F2_68 as the provisional reference for further controlled comparisons; keep B0_68 and inspect signals before choosing filters. | Course source unchanged; F2 feature version 1 and reusable fixed-fold evaluator; per-fold completion logs supplied; consolidated F2 export pending; team experiment commit not yet recorded. |
 
 The code revision above identifies the instructor's source used in Colab. It is not the team's experiment commit. Add the team commit after saving the executed notebook and this log in the team repository.
 
@@ -549,7 +569,7 @@ Scores and differences were rounded independently from the full-precision values
 
 Confirmed Colab output: Guardado: /content/drive/MyDrive/CM2013_data/experiments/C1_crop30.json. The export cell includes the course revision, runtime versions, baseline configuration, 16 feature names, 30-minute margin, training-only crop scope, complete-epoch evaluation scope and full C1 report with predictions. The JSON bytes have not been uploaded here for independent inspection. This confirms the reported save operation, not a team repository commit.
 
-**Current comparison budget (updated after P1):** 5 of at most 12 configurations evaluated: B0, F1, F2, C1 and P1. Seven remain. The three-subject pilot and label/quality diagnostics remain outside this count. The team's final pipeline, final-model commit and EXPECTED_SCORE.md registration remain future work.
+**Eight-subject comparison budget at the P1 checkpoint:** 5 of at most 12 configurations evaluated: B0, F1, F2, C1 and P1. Seven remain. The three-subject pilot and label/quality diagnostics remain outside this count. The team's final pipeline, final-model commit and EXPECTED_SCORE.md registration remain future work.
 
 ## EEG quality screening and targeted inspection — 2026-10-27
 
@@ -730,9 +750,283 @@ Other visible changes are small: N2-to-W and N2-to-REM each rise by about one di
 
 **Decision after confusion review:** retain F2. N1 remains the largest class weakness; this particular added low-pass does not improve its recognition. The figure does not establish why the filter changed predictions or prove that all filtering is unhelpful.
 
-## Next candidate M1 — classifier comparison, specified before evaluation
+## 68-subject phase — protocol revision, 2026-10-29
 
-Proposed on 2026-10-27 after completing the P1 review; **not yet executed or scored** at this checkpoint. The comparison count remains five of twelve until execution.
+### Scope and cohort decision
+
+Following team discussion, work moved from the small exploratory cohort to all **68 available development subjects**, with **133 recordings**. The first eight subjects were a convenient initial subset, not an instructor-required or demonstrably representative sample. Their five completed configurations remain useful exploratory evidence; repeating every earlier configuration on the larger cohort is not automatic.
+
+A new unchanged baseline was evaluated before adopting any eight-subject candidate in this phase. Both B0_68 and F2_68 are newly trained 68-subject cross-validation experiments. No fitted model from the eight-subject phase was transferred.
+
+The earlier at-most-12-configuration plan referred to the fixed eight-subject exploration; five configurations were completed there. The active phase has two completed configurations. In total the log now contains seven cohort/configuration evaluations, with B0 and F2 repeated on a different cohort, plus the separate pilot. Five fits for one A–E strategy count as one configuration, not five different methods. No replacement numerical comparison budget is retrospectively claimed; record the next comparison plan before further training.
+
+### Exact fixed A–E assignment
+
+These are the **test subjects** for each fold. Training uses the other four lists. All nights of one participant remain together. Every development subject is tested exactly once; within each fold the training and test subject sets are disjoint.
+
+| Test fold | Subject IDs |
+|---|---|
+| A | SC400, SC405, SC411, SC417, SC422, SC428, SC434, SC441, SC446, SC452, SC458, SC463, SC471, SC477 |
+| B | SC401, SC406, SC412, SC418, SC423, SC429, SC435, SC442, SC447, SC453, SC459, SC465, SC473, SC481 |
+| C | SC402, SC407, SC413, SC419, SC425, SC430, SC436, SC443, SC449, SC454, SC460, SC466, SC474, SC482 |
+| D | SC403, SC409, SC414, SC420, SC426, SC431, SC437, SC444, SC450, SC455, SC461, SC467, SC475 |
+| E | SC404, SC410, SC415, SC421, SC427, SC433, SC438, SC445, SC451, SC457, SC462, SC470, SC476 |
+
+| Fold | Train subjects | Test subjects | Test recordings | Train epochs | Test epochs |
+|---|---|---|---|---|---|
+| A | 54 | 14 | 27 | 286,790 | 73,831 |
+| B | 54 | 14 | 28 | 285,309 | 75,312 |
+| C | 54 | 14 | 26 | 290,405 | 70,216 |
+| D | 55 | 13 | 26 | 290,337 | 70,284 |
+| E | 55 | 13 | 26 | 289,643 | 70,978 |
+
+The five test-epoch counts sum to **360,621**. The notebook assembled the feature tables and checked the subject set, exclusion of final holdout subjects, feature finiteness, train/test subject separation and exactly-once test coverage. The explicit indices are stored in `SPLITS_68`; they are reused for all controlled comparisons.
+
+The original `track.evaluate` automatically uses LOSO for at most 12 groups and a five-fold `GroupKFold` for larger cohorts. It does not directly accept the selected A–E memberships. The 68-subject runs therefore use a custom loop over `SPLITS_68`, with a new scaler/classifier pipeline in every fold. Calling the original evaluator on the 68 subjects would not by itself guarantee this named assignment.
+
+Final holdout subjects, excluded from these experiments: **SC408, SC416, SC424, SC432, SC440, SC448, SC456, SC464, SC472, SC480**.
+
+### Colleague's earlier five-fold assignment
+
+Vicente supplied a colleague's train/test subject lists produced before A–E was defined. Checking those lists showed the same 68 development subjects, no train/test subject overlap within a fold, one test appearance per subject and no reserved holdout subjects. This verifies the separation in the supplied lists, not every fitting step of the colleague's unseen pipeline.
+
+Their earlier **test** memberships were:
+
+| Earlier fold | Train subjects | Test subjects | Test subject IDs |
+|---|---|---|---|
+| 1 | 55 | 13 | SC403, SC407, SC415, SC434, SC435, SC438, SC445, SC449, SC454, SC457, SC466, SC467, SC474 |
+| 2 | 54 | 14 | SC405, SC409, SC413, SC420, SC425, SC429, SC441, SC442, SC455, SC458, SC465, SC470, SC473, SC482 |
+| 3 | 54 | 14 | SC402, SC411, SC412, SC414, SC418, SC421, SC426, SC427, SC430, SC431, SC436, SC437, SC459, SC462 |
+| 4 | 55 | 13 | SC401, SC406, SC417, SC433, SC443, SC444, SC446, SC447, SC451, SC453, SC461, SC475, SC477 |
+| 5 | 54 | 14 | SC400, SC404, SC410, SC419, SC422, SC423, SC428, SC450, SC452, SC460, SC463, SC471, SC476, SC481 |
+
+These groups differ from A–E and cannot be made equivalent just by renaming fold numbers as letters. For example, SC403 and SC407 are together in earlier fold 1 but are in D and C under A–E. The lists alone do not establish that subjects were randomly shuffled.
+
+Keep earlier team experiments labelled as using the **previous five-fold subject split**. They can be compared within that earlier protocol if their test epochs and fitting procedures also match. Direct comparisons with this log's A–E results require evaluating the selected strategies on A–E. Changing only the split can reuse fixed per-recording features; training-fold-fitted steps and models must be fitted again. No colleague result is silently relabelled as A–E in this log.
+
+### Download and persistent-folder checkpoint
+
+- The download was resumed in the existing `/content/drive/MyDrive/CM2013_data/train` folder and completed for 68 subjects and 133 PSG/Hypnogram pairs.
+- A read-only inventory found **266 EDF files, 6.151 GiB**, with all 133 matching annotation files and no repeated EDF basenames inside `train`.
+- At that pre-feature-preparation checkpoint there were two parsed-record caches (4.090 GiB), 32 existing processing/feature caches (0.996 GiB) and three result JSON files (0.011 GiB). These are historical inventory values, not a new size measurement after the 68-subject runs.
+- Dataset EDFs, parsed-record caches, feature caches and result reports have different purposes. No cache/data deletion or migration was part of the continuation.
+- The notebook was organised into session setup, archived eight-subject work and the active 68-subject phase. The later 68-subject code was added through successive chat cells; the newly executed notebook has not yet been supplied as a fresh upload.
+- No whole-cohort parsed cache was built for this phase. Processing reads one recording at a time.
+
+### Per-recording baseline feature preparation
+
+`preparar_b0_gravacao(psg)` uses a temporary local directory with links to the existing PSG/Hypnogram pair, loads that one night at **100 Hz / 30-second epochs**, and applies the original identity-preprocessing / 11-feature Welch recipe. It returns only the record ID, feature matrix, labels, subject groups and feature names. No EDF copy or full parsed-record array is placed in the new feature cache.
+
+- Cache step: `viggy_b0_features`, under `/content/drive/MyDrive/CM2013_data/cache/viggy`.
+- `B0_FEATURE_VERSION = 1`.
+- Cache key: feature version, pinned course revision, loading settings, baseline processing/feature recipe, Python/NumPy/SciPy/MNE runtime versions, and each source file's name, byte size and nanosecond modification time.
+- The cache is independent of the classifier and validation-fold choice. Changing those does not require repeating the same fixed feature calculations.
+- No scaler, learned feature selection, resampling or fitted classifier is cached across folds.
+- The first test, SC4001E0 / SC400, produced **2,650 epochs × 11 features** in **75.2 seconds**, saved as `_cache_viggy_b0_features_70271cb6daa7.pkl`.
+- In the subsequent 133-record loop, that entry was reused and the other **132** entries were computed and saved. The loop took **112.5 minutes**, excluding the earlier standalone first-record computation.
+- Completion: **68 subjects, 133 recordings, 360,621 epochs, 11 features**. The feature tables were concatenated into `X_b0_68`, `y_b0_68`, `groups_b0_68` and `record_ids_b0_68`.
+- Feature matrices passed finite-value and alignment checks. These checks are not a raw-signal artifact audit of all 133 nights.
+
+### Common retained-label distribution
+
+| Stage | Epochs | Share |
+|---|---|---|
+| W | 248,341 | 68.86% |
+| N1 | 17,877 | 4.96% |
+| N2 | 60,494 | 16.77% |
+| N3 | 11,610 | 3.22% |
+| REM | 22,299 | 6.18% |
+
+The counts sum to 360,621. The supplied loader merges old stages 3/4 into N3 and excludes Movement/Unknown epochs. Wake is retained throughout evaluation. Both 68-subject strategies use exactly these labels and test epochs.
+
+## Iteration 7 (B0_68) — original baseline on the fixed A–E folds
+
+**Status: all five folds completed; pooled and per-stage results and the confusion figure supplied by Vicente on 2026-10-29.**
+
+### Pipeline, execution and timing
+
+- `X_b0_68.shape == (360621, 11)`; 68 subjects and 133 recordings.
+- Original five absolute EEG band powers, three EEG Hjorth parameters, EEG spectral entropy, EOG movement and EMG RMS.
+- Supplied Welch feature estimator, identity preprocessing, no added high-pass/low-pass/notch, no training crop and no added feature selection.
+- Fresh `StandardScaler → RandomForestClassifier` pipeline per fold: **200 trees, class_weight="balanced", random_state=0**. CPU parallelism was set to `n_jobs=-1`; the other baseline model settings were retained.
+- Scaling and class weights/model fitting use only the training subjects. The complete test recordings are predicted; no test-label-derived crop is applied.
+- Fold A was timed first and saved. The subsequent loop loaded A and trained B–E, checking saved-result metadata, test indices, true labels and subject groups before reuse.
+- Per-fold outputs contain the course revision, runtime metadata, feature version/names, A–E assignment, recording/epoch manifest, model/scaler parameters, train/test subjects, test row indices, timings and full prediction/report arrays.
+- Exact runtime versions for this active phase have not been separately transcribed from the JSONs. Do not assign the older Python 3.13.16 runtime block to these runs without checking their saved metadata.
+
+| Fold | Kappa | Macro-F1 | Accuracy | Balanced accuracy | Training min |
+|---|---|---|---|---|---|
+| A | 0.743 | 0.667 | 0.881 | 0.661 | 6.953 |
+| B | 0.716 | 0.642 | 0.861 | 0.629 | 7.104 |
+| C | 0.730 | 0.643 | 0.874 | 0.612 | 7.011 |
+| D | 0.715 | 0.636 | 0.873 | 0.597 | 7.118 |
+| E | 0.737 | 0.658 | 0.874 | 0.633 | 7.025 |
+
+**Reported primary result: mean fold kappa 0.728 ± 0.012**, using the sample SD (`ddof=1`) across the five folds. Total training time is approximately **35.2 minutes**, counting A once. Fold A's initial printed prediction time was 2.2 seconds.
+
+Fold metrics and timings above preserve the supplied three-decimal display precision. The mean/SD came from the unrounded values in Colab; rounding should not be used to invent more precise estimates.
+
+### Pooled out-of-fold panel
+
+All 360,621 epochs were assigned exactly one test prediction in their original row order before the joint report was computed.
+
+| Metric | Pooled value |
+|---|---|
+| Cohen's kappa | 0.728 |
+| Macro-F1 | 0.651 |
+| Accuracy | 0.873 |
+| Balanced accuracy | 0.628 |
+
+| Stage / aggregate | Precision | Recall | F1 | Support |
+|---|---|---|---|---|
+| W | 0.937 | 0.980 | 0.958 | 248,341 |
+| N1 | 0.352 | 0.131 | 0.191 | 17,877 |
+| N2 | 0.751 | 0.809 | 0.779 | 60,494 |
+| N3 | 0.828 | 0.667 | 0.739 | 11,610 |
+| REM | 0.623 | 0.553 | 0.586 | 22,299 |
+| Macro average | 0.698 | 0.628 | 0.651 | 360,621 |
+| Support-weighted average | 0.854 | 0.873 | 0.860 | 360,621 |
+
+These pooled metrics are computed from all test predictions together, not by averaging the five printed fold metrics. In particular, mean fold macro-F1 and pooled macro-F1 are different quantities. The course report also retains per-subject panels; no numerical SD across 68 individual subjects was supplied here.
+
+### Confusion inspection
+
+Source: the baseline confusion figure supplied as `image(20261029-144624).png`. Rows are true stages, columns predicted stages, normalized within each true stage. Values below are the figure's three-decimal values.
+
+| True stage | Predicted W | Predicted N1 | Predicted N2 | Predicted N3 | Predicted REM |
+|---|---|---|---|---|---|
+| W | 0.980 | 0.007 | 0.009 | 0.001 | 0.004 |
+| N1 | 0.413 | 0.131 | 0.311 | 0.002 | 0.143 |
+| N2 | 0.082 | 0.022 | 0.809 | 0.022 | 0.064 |
+| N3 | 0.074 | 0.001 | 0.255 | 0.667 | 0.004 |
+| REM | 0.142 | 0.059 | 0.243 | 0.002 | 0.553 |
+
+Rounded rows can differ slightly from a sum of one; the entries are not exact integer counts. No counts are reconstructed by multiplying rounded rates by class supports.
+
+### Interpretation and decision
+
+Wake represents 68.86% of the retained data and has recall 0.980. Accuracy 0.873 therefore needs to be read with macro-F1, balanced accuracy and the stage panel.
+
+N1 is the main weakness: recall 0.131 and F1 0.191; about 41.3% of N1 epochs are predicted as Wake and 31.1% as N2. N3-to-N2 and REM-to-N2 confusions are about 25.5% and 24.3%. N3 has fewer retained examples than N1 but substantially higher recall, illustrating that class frequency alone does not explain the difference. Class weighting was already enabled.
+
+**Decision:** use B0_68 as the fixed A–E reference. Its lower score than the eight-subject baseline is not a controlled change in pipeline quality: the evaluated subjects, training-set sizes and folds differ. No filter, crop or classifier alternative is selected from this baseline matrix alone.
+
+### Output status
+
+- `experiments/B0_68_fixed_AE_fold_A.json`: an explicit successful save path was supplied after the A run.
+- `experiments/B0_68_fixed_AE_fold_B.json` through `...fold_E.json`: the supplied loop saves each file before printing the reported completion; all four completion messages were supplied.
+- The full pooled report and baseline figure were computed and shown.
+- A separate export cell for `experiments/B0_68_fixed_AE.json` and `experiments/B0_68_fixed_AE_confusion.png` was provided, but its execution/save output was not separately confirmed.
+- The exported JSON bytes were not uploaded for independent inspection; reported execution and outputs, rather than a local rerun, are the evidence recorded here.
+
+## Iteration 8 (F2_68) — original plus relative powers on the same A–E folds
+
+**Status: all five folds and pooled/class/confusion diagnostics completed. F2_68 retained as the provisional reference. The latest consolidated JSON/PNG export cell is still pending at this update.**
+
+### Hypothesis and single controlled change
+
+The earlier small-cohort work motivated checking whether relative EEG powers provide useful complementary information alongside the absolute powers on the larger cohort. The same feature strategy is evaluated with newly trained models on the 68 development subjects; this is not reuse of an eight-subject fitted model.
+
+- Start from the cached original matrix `X_b0_68` and preserve all 11 original columns.
+- Append five relative powers: delta, theta, alpha, sigma and beta.
+- For each epoch, divide each absolute band power by the sum of those five band powers (0.5–30 Hz under the original definitions).
+- If the denominator is zero, all five relative values are zero. Reject non-finite or negative input powers.
+- No labels, fitted statistics, other epochs or other participants enter this transformation. The scaler is still fitted inside each training fold.
+- `F2_FEATURE_VERSION = 1`; `X_f2_68.shape == (360621, 16)`.
+- Labels, subject groups, record order, complete test epochs, fixed A–E indices and baseline model/scaler settings remain the same. No signal filter or training crop is added.
+- F2 preparation uses the existing feature table; it does not reread EDFs or create another whole-cohort parsed cache. Five new classifier fits are still required.
+
+The reusable `avaliar_experiencia_68` function clones the baseline pipeline per fold, verifies that the test indices match B0_68, saves each result via a temporary file and supports reuse only after checking metadata and prediction alignment. In the supplied F2 execution, all five folds were newly trained.
+
+### Reported fold results
+
+| Fold | Kappa | Macro-F1 | Accuracy | Balanced accuracy | Training min |
+|---|---|---|---|---|---|
+| A | 0.753 | 0.679 | 0.885 | 0.676 | 9.232 |
+| B | 0.718 | 0.647 | 0.862 | 0.636 | 9.083 |
+| C | 0.739 | 0.652 | 0.878 | 0.622 | 9.248 |
+| D | 0.717 | 0.638 | 0.875 | 0.598 | 9.350 |
+| E | 0.748 | 0.673 | 0.879 | 0.653 | 9.364 |
+
+**Reported primary result: mean fold kappa 0.735 ± 0.017**, sample SD across five folds. Total training time is approximately **46.3 minutes**, about **11.1 minutes** more than B0_68 in these runs. This is an observed runtime comparison, not a guaranteed speed ratio on another session or machine.
+
+| Fold | B0_68 kappa | F2_68 kappa | Difference, as printed |
+|---|---|---|---|
+| A | 0.743 | 0.753 | +0.010 |
+| B | 0.716 | 0.718 | +0.002 |
+| C | 0.730 | 0.739 | +0.009 |
+| D | 0.715 | 0.717 | +0.002 |
+| E | 0.737 | 0.748 | +0.011 |
+
+All five folds improve. Gains are larger in A/C/E than B/D, and the observed between-fold SD increases. These paired fold results do not show that every one of the 68 individual participants improves and do not establish statistical significance.
+
+### Pooled metrics and class results
+
+The `juntar_previsoes_68` helper checks fold identities, true labels, subject groups, prediction lengths and exactly-once coverage, then reconstructs the joint report in the original row order. Every original valid epoch, including Wake, remains in the evaluation.
+
+| Metric | B0_68 | F2_68 | Difference from rounded outputs |
+|---|---|---|---|
+| Mean fold kappa | 0.728 | 0.735 | +0.007 |
+| Fold kappa sample SD | 0.012 | 0.017 | +0.005 |
+| Pooled kappa | 0.728 | 0.735 | +0.007 |
+| Pooled macro-F1 | 0.651 | 0.659 | +0.008 |
+| Pooled accuracy | 0.873 | 0.876 | +0.003 |
+| Pooled balanced accuracy | 0.628 | 0.638 | +0.010 |
+| Total training min, approximate | 35.2 | 46.3 | +11.1 |
+
+| Stage / aggregate | Precision | Recall | F1 | Support |
+|---|---|---|---|---|
+| W | 0.939 | 0.980 | 0.959 | 248,341 |
+| N1 | 0.351 | 0.135 | 0.195 | 17,877 |
+| N2 | 0.761 | 0.813 | 0.786 | 60,494 |
+| N3 | 0.838 | 0.681 | 0.751 | 11,610 |
+| REM | 0.631 | 0.581 | 0.605 | 22,299 |
+| Macro average | 0.704 | 0.638 | 0.659 | 360,621 |
+| Support-weighted average | 0.857 | 0.876 | 0.863 | 360,621 |
+
+| Stage | Recall B0 | Recall F2 | F1 B0 | F1 F2 | F1 difference, as printed |
+|---|---|---|---|---|---|
+| W | 0.980 | 0.980 | 0.958 | 0.959 | +0.001 |
+| N1 | 0.131 | 0.135 | 0.191 | 0.195 | +0.004 |
+| N2 | 0.809 | 0.813 | 0.779 | 0.786 | +0.007 |
+| N3 | 0.667 | 0.681 | 0.739 | 0.751 | +0.012 |
+| REM | 0.553 | 0.581 | 0.586 | 0.605 | +0.019 |
+
+All five stage F1 scores improve. This does not mean that every class metric rises: N1 precision changes from 0.352 to 0.351, while its recall increases only from 0.131 to 0.135. The larger F1 gains are REM (+0.019) and N3 (+0.012).
+
+### Confusion inspection
+
+Source: `image(20261029-161643).png`, supplied after the pooled F2 report. Same true-row / predicted-column order and common 0–1 colour scale as B0. Values are transcribed at the displayed three-decimal precision.
+
+| True stage | Predicted W | Predicted N1 | Predicted N2 | Predicted N3 | Predicted REM |
+|---|---|---|---|---|---|
+| W | 0.980 | 0.007 | 0.009 | 0.001 | 0.004 |
+| N1 | 0.412 | 0.135 | 0.303 | 0.002 | 0.149 |
+| N2 | 0.077 | 0.023 | 0.813 | 0.022 | 0.064 |
+| N3 | 0.066 | 0.000 | 0.249 | 0.681 | 0.005 |
+| REM | 0.138 | 0.061 | 0.217 | 0.002 | 0.581 |
+
+N1-to-W is almost unchanged (0.413 → 0.412); N1-to-N2 declines (0.311 → 0.303) and N1-to-REM rises (0.143 → 0.149). REM-to-N2 declines from 0.243 to 0.217, alongside improved correct REM recognition (0.553 → 0.581). N3 recall rises from 0.667 to 0.681.
+
+These are comparisons of rounded row proportions, not paired tracing of individual epochs between prediction categories. A displayed 0.000 does not prove that the exact count is zero.
+
+### Decision
+
+**Retain F2_68 as the provisional reference for subsequent 68-subject A–E comparisons.** The primary mean kappa is about 0.007 higher, pooled macro-F1 rises by 0.008 and all five stage F1 values rise, at the cost of extra training time. Keep B0_68 as the unchanged baseline.
+
+N1 remains the main weakness (recall 13.5%, F1 0.195). The matrix does not by itself identify an artifact mechanism or demonstrate that a filter or Wake crop would fix the errors. The next signal-processing step is inspection of selected recordings, time traces and spectra before choosing filters. No new filtering/cropping strategy has yet been trained on these 68 subjects.
+
+### Output status at the requested pause
+
+- Individual `experiments/F2_68_fixed_AE_fold_A.json` through `...fold_E.json` are produced by the saving evaluation function before each supplied completion message.
+- The joint report, stage comparison and F2 confusion figure were computed and shown; the figure was also supplied as an attachment.
+- The next proposed cell would create `experiments/F2_68_fixed_AE.json` and `experiments/F2_68_fixed_AE_confusion.png`. **Vicente paused before adding/running that cell to request this log update. These named consolidated exports are pending, not confirmed saved files.**
+- Exact JSON contents, full-precision confusion counts and numerical 68-subject paired/spread tables have not been independently inspected here. The full course reports retain the predictions and group/fold panels for those later checks.
+- No final model has been fitted to all 68 subjects together; no final holdout predictions, final-model commit or `EXPECTED_SCORE.md` registration are part of these completed runs.
+
+## Archived proposal M1 — eight-subject classifier comparison (not executed)
+
+Proposed on 2026-10-27 after completing the P1 review; **not executed or scored**. On 2026-10-29 work moved to the 68-subject phase before this proposal was run. It is retained as a historical specification, not the active next action. Any later model-family comparison should be explicitly specified on the current cohort and shared folds. The historical eight-subject count remains five of twelve.
 
 - Question: with F2's fixed 16 descriptors, how does a regularized linear classifier compare with the current random forest? This compares model families and their class trade-offs without changing signal processing or the cohort.
 - Keep X8_comb, all 44,303 epochs, no added LPF, no training crop, the same SC400–SC407 groups and eight LOSO folds. Reuse the computed feature matrix; do not recompute features or use hold-out data.
@@ -741,7 +1035,7 @@ Proposed on 2026-10-27 after completing the P1 review; **not yet executed or sco
 - Retain F2's RF result as the working reference until the complete M1 panel, subject spread and paired/class inspection support a change. Report convergence warnings if any; numerical convergence must be resolved before interpreting the candidate's score.
 - Method reference checked against the matching installed version: https://scikit-learn.org/1.6/modules/generated/sklearn.linear_model.LogisticRegression.html.
 
-## Decision log
+## Archived decision log — eight-subject checkpoint, 2026-10-27
 
 | Module | Current choice | Rationale | Alternatives tested so far |
 |---|---|---|---|
@@ -752,9 +1046,23 @@ Proposed on 2026-10-27 after completing the P1 review; **not yet executed or sco
 | Feature selection / classification | Current reference: supplied scaler and balanced RF, fitted within folds | Keep F2 while preparing a controlled model-family comparison | No alternative classifier evaluated yet; M1 logistic regression is specified above before execution |
 | Inference / reporting | Complete-epoch eight-subject LOSO retained for B0/F1/F2/C1/P1; P1 aggregate, class, paired subject and confusion results recorded | Preserve evaluation coverage while comparing strategies and report gains as well as losses; final 16-feature training/inference integration remains pending | B0/F1/F2, C1 and P1 JSON saves confirmed; direct C1 confusion inspection, per-record night reporting and independent JSON inspection pending |
 
+## Current decision log — 2026-10-29
+
+| Module | Current choice | Evidence / next comparison |
+|---|---|---|
+| Cohort and split | 68 development subjects / 133 recordings; exact A–E subject assignment | B0_68 and F2_68 use the same 360,621 complete test epochs; earlier eight-subject and colleague-split scores remain separate. |
+| Data preparation | Per-recording original-feature cache, version 1; existing persistent data folder | 133 feature entries prepared; avoid holding all raw nights in memory. Derive F2's five extra columns from the cached original powers. |
+| Preprocessing / filtering | No added filter in the current reference | P1 was tested only on eight subjects. Inspect selected 68-cohort signals/spectra before choosing and evaluating a filter; do not generalise the earlier P1 loss to every filter. |
+| Training epoch selection | All retained training epochs; Wake included in testing | C1 was tested only in the eight-subject phase. A future Wake-crop comparison must operate inside training folds and preserve the common test set. |
+| Features | F2_68: original 11 plus five relative EEG powers | Mean fold kappa 0.735 ± 0.017 versus B0_68 0.728 ± 0.012; five paired fold gains; N1 remains weak. |
+| Classifier / fitted steps | Fold-fitted StandardScaler and 200-tree balanced RF, seed 0, n_jobs=-1; no extra feature selection | No alternative classifier has been executed. The earlier M1 logistic-regression proposal is archived, not a completed run. |
+| Reporting / final evaluation | Mean ± sample SD across five folds, pooled panel and stage/confusion inspection; final holdout unused | Finish the consolidated F2 export, save the executed notebook/log and record the team commit. Final all-68 fitting and holdout inference remain later steps. |
+
 ## Revisions
 
 On 2026-10-22 the provisional **F1 relative-only band-power choice was revisited and replaced with F2 combined absolute/relative powers** after the predeclared F2 experiment and diagnostic review. Before F2, F1 was preferred to B0 because its mean subject kappa and macro-F1 were slightly higher and its subject spread lower. F2 then raised mean subject kappa from 0.828 (SD 0.054) to 0.837 (SD 0.052), and pooled macro-F1 from 0.758 to 0.762, with paired gains in 6/8 subjects. N1 F1 fell from 0.368 to 0.354, while N2, N3 and REM improved versus F1; the overall gain was judged worth this trade-off for the declared metrics. All numbers refer to the same eight-subject development cohort. This records an actual provisional choice changed after a later result; the team's final choice remains open.
+
+On 2026-10-29 the **development scope and validation protocol were revised**: the first-eight cohort became historical exploration and a new 68-subject baseline was established with explicit A–E memberships. The eight-subject M1 run was postponed rather than reported as completed. The F2 feature strategy was then evaluated anew on the same 68-subject folds and retained as the provisional reference (0.735 ± 0.017 versus B0_68 0.728 ± 0.012 across five folds). This repeats a feature strategy on a larger, overlapping cohort; it is not an independent holdout test or evidence that the eight- and 68-subject absolute scores are directly comparable.
 
 ## Contributions recorded so far
 
@@ -767,18 +1075,25 @@ On 2026-10-22 the provisional **F1 relative-only band-power choice was revisited
 | 5 (C1) / label audit | Vicente Soares | Reported the team's direction-setting meeting; confirmed the B0/F1/F2 and C1 JSON saves; supplied per-subject stage proportions and per-night Wake endpoint counts; executed the predeclared training-only crop and supplied fold sizes, aggregate/spread, class and paired subject reports. Code, arithmetic, interpretation and log preparation were assisted by ChatGPT. | Strategy discussion occurred; peer review of C1 results not yet recorded. |
 | QC after C1 | Vicente Soares | Executed EEG finite/constant and amplitude screening across all 16 nights; supplied SC4061E0 median/maximum-epoch figure and extrema; read EDF calibration/prefilter metadata and supplied per-stage rail-contact percentages. Code and interpretation were assisted by ChatGPT; the candidate filter's analytical response was checked separately, not as a Colab model run. | No peer review of these QC findings recorded yet. |
 | 6 (P1) / caching | Vicente Soares | Executed the W/N3 low-pass preview, reusable F2 feature-helper checks, versioned per-recording preprocessing/features caches and eight-subject P1 evaluation; supplied cache-save confirmations, aggregate metrics with kappa spread, per-stage report, paired subject table, successful P1 JSON save message and side-by-side F2/P1 confusion matrices. Code, interpretation and log preparation were assisted by ChatGPT. | Peer review of P1 results not yet recorded. |
+| 68-subject preparation / protocol | Vicente Soares | Continued the existing download to 68 subjects / 133 pairs, supplied the read-only folder inventory, executed per-recording versioned feature caching and supplied all 133 completion records; assembled the 360,621-row baseline and validated the exact A–E indices. Code, checking, interpretation and log preparation were assisted by ChatGPT. | Shared-protocol discussion occurred; no peer review of the new run code/results is recorded. |
+| 7 (B0_68) | Vicente Soares | Timed and saved fold A, reused A while completing B–E, supplied all fold metrics/timings and the pooled class report/confusion figure. Code and log preparation were assisted by ChatGPT. | Peer review not yet recorded. |
+| 8 (F2_68) | Vicente Soares | Derived 16 features from the cached baseline, executed five new fixed-fold fits, supplied paired fold gains, full pooled metrics, per-stage comparison and confusion figure; paused before the consolidated-export cell to update this log. Code, interpretation and log preparation were assisted by ChatGPT. | Peer review not yet recorded. |
+| Earlier team split documentation | Colleague (not identified in the supplied message); relayed by Vicente | Supplied the earlier five-fold train/test subject memberships. The lists were checked and retained separately from A–E; no colleague score is reclassified as an A–E result. | Split-list consistency checked; the unseen colleague pipeline was not audited. |
 
-Contributions from other team members will be added when their actual work is documented.
+Further contributions and result reviews from named team members will be added when supplied.
 
-## Next steps and missing evidence
+## Next steps and missing evidence — updated 2026-10-29
 
-- Save the executed notebook and this log in the team repository and record the team commit.
-- B0/F1/F2, C1 and P1 exact-report JSON saves are confirmed in Colab; C1/F2 and P1/F2 paired subject comparisons are recorded. Preserve the updated executed notebook and record the actual experiment commit.
-- P1/F2 confusion inspection is now recorded, including increased N1-to-W confusion. Direct C1 confusion inspection, per-record night reports and independent inspection of exported JSON files remain pending; use existing predictions.
-- Next evaluate the predeclared M1 logistic-regression pipeline on X8_comb with the same eight subject folds, then save and inspect its full report before selecting another classifier or changing features. M1 has not yet been scored.
-- Versioned per-recording preprocessing/features caching is now implemented and its first writes confirmed for all 16 nights. Keep data/cache files outside git and bump the relevant version whenever processing or feature code changes.
-- Keep the declared eight-subject cohort and maximum 12-configuration budget fixed during comparisons; five configurations have been evaluated and seven remain. Record any justified protocol revision before implementing it.
-- A reusable 16-feature helper is implemented and checked against F2 on the first recording. Integrate the selected processing/features consistently into final training, inference and feature names; the original track adapter's default inference still uses 11 features. Keep no additional LPF as the current working choice after P1.
-- Cohort EEG amplitude/integrity screening, targeted SC4061E0 waveform/header inspection and the W/N3 LPF preview are recorded. Inspect further nights where needed, preserving quality flags. No automatic rejection rule has been chosen, and a filtered trace must not be treated as proof of recovered clipped data.
-- A revised provisional feature decision is documented above. Final team pipeline selection, EXPECTED_SCORE.md registration and final hold-out inference are still future stages.
+1. **Finish the export already proposed for F2_68.** The five individual fold files exist according to the completed saving loop; the consolidated F2 JSON/PNG export has not yet been run. Confirm B0's optional consolidated export separately rather than assuming it was saved.
+2. Save this updated log and the actually executed Colab notebook, including the new 68-subject cells/outputs, in the team repository. Record the actual experiment commit. The known course SHA is source provenance, not a final-model commit.
+3. **Inspect signals and spectra before selecting filters.** Use a manageable selection of development nights/participants and stages, record how examples were selected and retain quality flags. Earlier detailed raw-signal QC covered SC400–SC407, not all 68 subjects. Full-cohort finite feature values do not establish artifact-free raw recordings.
+4. Choose a small number of justified filtering/preprocessing alternatives. Change one choice at a time against F2_68 using the exact A–E lists and the same complete test epochs. For a signal-processing change, recompute the affected original and relative features after processing; bump the relevant per-recording cache versions/settings.
+5. Consider later controlled comparisons of training class weights/epoch selection, spectral methods, features or classifiers. Any training Wake crop or resampling belongs inside the training fold; keep Wake and all other valid common test epochs. Fit all learned scaling/selection/model steps only on training subjects.
+6. Use the saved predictions to inspect individual-subject variability and paired B0_68/F2_68 changes, as well as the five-fold summaries. Do not treat the fold SD as individual-subject SD or a confidence interval for the method difference. No extra model fit is needed for these diagnostics.
+7. Keep the eight-subject results and the earlier colleague fold assignment as historical evidence. Repeat selected strategies on the shared protocol when making cross-team comparisons; do not silently merge results from different partitions or redo downloads/fixed features solely because the folds changed.
+8. The earlier eight-subject M1 proposal remains unexecuted and postponed. There is no requirement to exhaust its remaining eight-subject comparison budget. Record the next comparison plan and its scope before running further configurations.
+9. Final selected preprocessing/features must be implemented consistently for final fitting and inference. The original adapter default still describes 11 features; the chosen 16-feature construction is not automatically integrated into the course's default final-model path.
+10. Before final holdout prediction, select the method from development results, record the final model/code commit and the required mean ± SD, split unit and protocol in `EXPECTED_SCORE.md`, and commit it **before** generating holdout predictions. Fit the chosen pipeline anew on all 68 development subjects and use the ten reserved subjects only for the final submission stage.
+
+Additional historical evidence still pending: direct C1 confusion inspection, per-record night summaries and independent inspection of the exported eight-subject JSONs. These can use the already saved predictions; they are not prerequisites for continuing the current 68-subject inspection step.
 
