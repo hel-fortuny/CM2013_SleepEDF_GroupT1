@@ -235,6 +235,50 @@ class SleepEDFTrack(TrackAdapter):
                                 imbalance=cfg.get("imbalance", "balanced"),
                                 threshold=float(cfg.get("threshold", 0.5)),
                                 smote_k=int(cfg.get("smote_k", 5)))
+    
+    def evaluate(self, X, y, groups, clf=None, cfg=None):
+        from sklearn.base import clone
+        from sleep_edf_folds import fixed_sleep_edf_folds
+        from adapter import C, _transform
+
+        if clf is not None and cfg and "imbalance" in cfg:
+            self.note(
+                "cfg['imbalance'] does not affect a custom classifier."
+            )
+
+        cfg = self._cfg(cfg)
+        clf = clf or self._baseline(cfg)
+        groups = np.asarray(groups)
+
+        yt, yp, gg, ff = [], [], [], []
+
+        for k, (tr, te) in enumerate(fixed_sleep_edf_folds(groups)):
+            C.assert_no_subject_leak(groups[tr], groups[te])
+
+            print(f"\n--- FOLD {k + 1} ---")
+            print("TRAIN:", sorted(set(groups[tr])))
+            print("TEST: ", sorted(set(groups[te])))
+
+            # Feature selection: training data only
+            sel = self.select_features(X[tr], y[tr], cfg)
+            Xtr = _transform(sel, X[tr])
+            Xte = _transform(sel, X[te])
+
+            # Train and evaluate
+            fold_clf = clone(clf)
+            fold_clf.fit(Xtr, y[tr])
+
+            yp.extend(fold_clf.predict(Xte))
+            yt.extend(y[te])
+            gg.extend(groups[te].tolist())
+            ff.extend([k] * len(te))
+
+        return self._make_report(
+            yt, yp,
+            groups=gg,
+            folds=ff,
+            n_groups=len(set(groups.tolist())),
+        )
 
     # ---- REAL data (Colab): Sleep-EDF via mne ----
     #: PhysioNet's official AWS mirror of Sleep-EDF: same files, usually far faster than physionet.org.
