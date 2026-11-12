@@ -488,8 +488,15 @@ def bandpass_notch(rec: "Recording", band=None, notch=None, order=4, channels=No
         x = a2
         if band is not None:
             lo, hi = band
-            wn = [max(lo / nyq, 1e-6), min(hi / nyq, 0.999)]
-            b, a = butter(order, wn, "band")
+            if lo is None:
+                wn = min(hi / nyq, 0.999)
+                b, a = butter(order, wn, btype="low")
+            elif hi is None:
+                wn = max(lo / nyq, 1e-6)
+                b, a = butter(order, wn, btype="high")
+            else:
+                wn = [max(lo / nyq, 1e-6), min(hi / nyq, 0.999)]
+                b, a = butter(order, wn, btype="band")
             x = apply(b, a, x)
         if notch is not None:
             b, a = iirnotch(notch / nyq, notch_q)
