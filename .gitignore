@@ -3,7 +3,6 @@
 venv/
 
 # Python temporary files
-saved_data/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
@@ -20,6 +19,8 @@ _lite_content/
 # local dataset cache for the capstone tracks — students download real data
 # themselves (see each track's dataset card); never committed here
 data_cache/
+experiments/
+saved_data/
 
 # instructor-only lab solutions must never land in this public student repo —
 # the real source of truth lives outside this repo entirely (companion-course/);
