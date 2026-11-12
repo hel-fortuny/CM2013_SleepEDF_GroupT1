@@ -148,3 +148,40 @@ Contributions from other team members will be added when their actual work is do
 
 
 
+
+
+## Experiment: C1_68_crop30_fixed_AE
+
+**Date:** 2026-11-12
+
+**Configuration**
+- Subjects: 68
+- Wake cropping: 30 minutes
+- Validation: 5 fixed subject-wise folds (A-E)
+
+**Results**
+
+| Metric | Value |
+|---|---:|
+| Accuracy | 0.866 |
+| Cohen's kappa | 0.724 |
+| Macro-F1 | 0.657 |
+| Balanced accuracy | 0.643 |
+| Mean fold kappa | 0.724 |
+| SD fold kappa | 0.022 |
+
+**Kappa by fold**
+
+- Fold A: 0.745
+- Fold B: 0.689
+- Fold C: 0.725
+- Fold D: 0.726
+- Fold E: 0.737
+
+**Saved outputs**
+- `experiments\C1_68_crop30_fixed_AE.json`
+- `experiments\C1_68_crop30_fixed_AE_confusion.png`
+- Five fold JSON reports (A-E)
+
+---
+
