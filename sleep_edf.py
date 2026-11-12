@@ -154,7 +154,47 @@ class SleepEDFTrack(TrackAdapter):
             return rec
         return bandpass_notch(rec, band=band, notch=notch, channels=chans,
                               causal=bool(cfg.get("causal", False)))
+    @staticmethod
+    def crop_wake_epochs(train_idx, y, groups, margin_min=10):
+        """
+        Keep 10 minutes before the first sleep epoch and
+        10 minutes after the last sleep epoch, per subject.
 
+        Applied only to training data.
+        """
+        import numpy as np
+
+        train_idx = np.asarray(train_idx)
+        y = np.asarray(y)
+        groups = np.asarray(groups)
+
+        margin_epochs = int(margin_min * 60 / 30)
+        keep = np.zeros(len(y), dtype=bool)
+
+        for subject in np.unique(groups[train_idx]):
+            idx = train_idx[groups[train_idx] == subject]
+            idx = np.sort(idx)
+
+            sleep_positions = np.flatnonzero(y[idx] != "W")
+
+            if len(sleep_positions) == 0:
+                keep[idx] = True
+                continue
+
+            start = max(0, sleep_positions[0] - margin_epochs)
+            end = min(len(idx), sleep_positions[-1] + margin_epochs + 1)
+
+            keep[idx[start:end]] = True
+
+        cropped_idx = train_idx[keep[train_idx]]
+
+        print(
+            f"Training epochs: {len(train_idx)} -> {len(cropped_idx)} "
+            f"({100 * (1 - len(cropped_idx)/len(train_idx)):.1f}% removed)"
+        )
+
+        return cropped_idx
+    
     # ---- module 3: FEATURE EXTRACTION (the DSP the student does) ----
     def extract_features(self, rec: Recording, cfg=None):
         """Cleaned epochs -> one feature vector per 30-s epoch (band powers,
@@ -236,7 +276,7 @@ class SleepEDFTrack(TrackAdapter):
                                 threshold=float(cfg.get("threshold", 0.5)),
                                 smote_k=int(cfg.get("smote_k", 5)))
     
-    def evaluate(self, X, y, groups, clf=None, cfg=None):
+    def evaluate(self, X, y, groups, clf=None, cfg=None, crop_wake_min=None):
         from sklearn.base import clone
         from sleep_edf_folds import fixed_sleep_edf_folds
         from adapter import C, _transform
@@ -254,6 +294,8 @@ class SleepEDFTrack(TrackAdapter):
 
         for k, (tr, te) in enumerate(fixed_sleep_edf_folds(groups)):
             C.assert_no_subject_leak(groups[tr], groups[te])
+            if crop_wake_min is not None:
+                tr = self.crop_wake_epochs(tr, y, groups, margin_min=crop_wake_min)
 
             print(f"\n--- FOLD {k + 1} ---")
             print("TRAIN:", sorted(set(groups[tr])))
