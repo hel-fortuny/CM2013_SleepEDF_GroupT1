@@ -53,7 +53,7 @@ class SleepEDFTrack(TrackAdapter):
     #: and both filter recipes, and the EEG band powers are integrated from a
     #: Chapter 7 estimator — so every stage-2 and stage-3 menu is real here.
     SUPPORTED_CFG_KEYS = (DENOISE_CFG_KEYS | SPECTRAL_CFG_KEYS
-                          | {"eeg_band", "filter_channels"})
+                      | {"eeg_band", "filter_channels", "selective_threshold"})
 
     # ---- synthetic smoke (offline / CI) ----
     def smoke(self, n_subjects=5, n_epochs=80, seed=0, difficulty="medium"):
@@ -84,6 +84,35 @@ class SleepEDFTrack(TrackAdapter):
                 labels=night["stages"]))
         return recs
 
+    @staticmethod
+    def recording_50hz_ratio(rec):
+        """Median 48-50 Hz / 0.5-50 Hz EEG power ratio."""
+        from scipy.signal import welch
+
+        ratios = []
+
+        for eeg in rec.epochs["eeg"]:
+            freqs, psd = welch(
+                eeg,
+                fs=rec.fs,
+                nperseg=min(1024, len(eeg))
+            )
+
+            total = np.trapezoid(
+                psd[(freqs >= 0.5) & (freqs <= 50)],
+                freqs[(freqs >= 0.5) & (freqs <= 50)]
+            )
+
+            band = np.trapezoid(
+                psd[(freqs >= 48) & (freqs <= 50)],
+                freqs[(freqs >= 48) & (freqs <= 50)]
+            )
+
+            if total > 0:
+                ratios.append(band / total)
+
+        return float(np.median(ratios)) if ratios else 0.0
+    
     # ---- module 2: PREPROCESSING (opt-in; the recipe is your decision) ----
     def preprocess(self, rec: Recording, cfg=None) -> Recording:
         """Identity by default — the supplied baseline scores the epochs as loaded,
@@ -130,6 +159,21 @@ class SleepEDFTrack(TrackAdapter):
         `adapter.bandpass_notch.__doc__` if you ever port this to a live monitor.
         """
         cfg = self._cfg(cfg)
+        # C11: Selective LP40 at recording level
+        if cfg.get("preprocess") == "selective_lp40":
+            threshold = float(cfg.get("selective_threshold", 0.10))
+            ratio = self.recording_50hz_ratio(rec)
+
+            if ratio >= threshold:
+                return bandpass_notch(
+                    rec,
+                    band=(None, 40.0),
+                    notch=None,
+                    channels=("eeg",),
+                    causal=False
+                )
+
+            return rec
         how = str(cfg.get("preprocess", "none") or "none").lower()
         chans = cfg.get("filter_channels", ("eeg",))
         if how in ("denoise", "by_noise", "noise"):
