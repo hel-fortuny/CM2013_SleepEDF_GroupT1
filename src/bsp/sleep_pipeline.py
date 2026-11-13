@@ -275,8 +275,11 @@ def _spectral_entropy(x, fs):
 
 def epoch_features(eeg, eog, emg, fs):
     feats = {}
+
+    # Original 11 features
     for name, band in _BANDS.items():
         feats[f"eeg_{name}"] = bio.bandpower(eeg, fs, band)
+
     a, m, c = _hjorth(eeg)
     feats["eeg_hjorth_activity"] = a
     feats["eeg_hjorth_mobility"] = m
@@ -284,6 +287,35 @@ def epoch_features(eeg, eog, emg, fs):
     feats["eeg_spec_entropy"] = _spectral_entropy(eeg, fs)
     feats["eog_movement"] = float(np.mean(np.abs(np.diff(eog))))
     feats["emg_rms"] = float(np.sqrt(np.mean(emg ** 2)))
+
+    # NEW: Spectral edge frequency (95%)
+    from scipy.signal import welch
+
+    freqs, psd = welch(eeg, fs=fs, nperseg=min(256, len(eeg)))
+    mask = (freqs >= 0.5) & (freqs <= 40.0)
+
+    f = freqs[mask]
+    p = psd[mask]
+
+    cumulative = np.cumsum(p)
+
+    if len(p) > 0 and cumulative[-1] > 0:
+        idx = np.searchsorted(cumulative, 0.95 * cumulative[-1])
+        feats["eeg_sef95"] = float(f[min(idx, len(f) - 1)])
+    else:
+        feats["eeg_sef95"] = 0.0
+
+    # NEW: Theta/alpha ratio
+    eps = 1e-12
+    feats["eeg_theta_alpha_ratio"] = (
+        feats["eeg_theta"] / (feats["eeg_alpha"] + eps)
+    )
+
+    # NEW: Delta/theta ratio
+    feats["eeg_delta_theta_ratio"] = (
+        feats["eeg_delta"] / (feats["eeg_theta"] + eps)
+    )
+
     return feats
 
 
