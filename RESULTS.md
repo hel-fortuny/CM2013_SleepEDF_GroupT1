@@ -179,8 +179,82 @@ Contributions from other team members will be added when their actual work is do
 - Fold E: 0.737
 
 **Saved outputs**
-- `experiments\C1_68_crop30_fixed_AE.json`
-- `experiments\C1_68_crop30_fixed_AE_confusion.png`
+- `experiments\C2_68_crop30_fixed_AE.json`
+- `experiments\C2_68_crop30_fixed_AE_confusion.png`
+- Five fold JSON reports (A-E)
+
+---
+
+
+
+## Experiment: C3_68_crop30_fixed_AE
+
+**Date:** 2026-11-13
+
+**Configuration**
+- Subjects: 68
+- Wake cropping: 30 minutes
+- Validation: 5 fixed subject-wise folds (A-E)
+
+**Results**
+
+| Metric | Value |
+|---|---:|
+| Accuracy | 0.866 |
+| Cohen's kappa | 0.724 |
+| Macro-F1 | 0.659 |
+| Balanced accuracy | 0.647 |
+| Mean fold kappa | 0.724 |
+| SD fold kappa | 0.022 |
+
+**Kappa by fold**
+
+- Fold A: 0.747
+- Fold B: 0.692
+- Fold C: 0.720
+- Fold D: 0.722
+- Fold E: 0.742
+
+**Saved outputs**
+- `experiments\C3_68_crop30_fixed_AE.json`
+- `experiments\C3_68_crop30_fixed_AE_confusion.png`
+- Five fold JSON reports (A-E)
+
+---
+
+
+
+## Experiment: C4_68_crop30_LP40_fixed_AE
+
+**Date:** 2026-11-13
+
+**Configuration**
+- Subjects: 68
+- Wake cropping: 30 minutes
+- Validation: 5 fixed subject-wise folds (A-E)
+
+**Results**
+
+| Metric | Value |
+|---|---:|
+| Accuracy | 0.866 |
+| Cohen's kappa | 0.724 |
+| Macro-F1 | 0.660 |
+| Balanced accuracy | 0.649 |
+| Mean fold kappa | 0.725 |
+| SD fold kappa | 0.022 |
+
+**Kappa by fold**
+
+- Fold A: 0.744
+- Fold B: 0.691
+- Fold C: 0.719
+- Fold D: 0.724
+- Fold E: 0.744
+
+**Saved outputs**
+- `experiments\C4_68_crop30_LP40_fixed_AE.json`
+- `experiments\C4_68_crop30_LP40_fixed_AE_confusion.png`
 - Five fold JSON reports (A-E)
 
 ---
