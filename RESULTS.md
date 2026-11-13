@@ -444,3 +444,40 @@ Contributions from other team members will be added when their actual work is do
 
 ---
 
+
+
+## Experiment: C10_68_crop30_LP40_relative_no_entropy_no_balance_fixed_AE
+
+**Date:** 2026-11-13
+
+**Configuration**
+- Subjects: 68
+- Wake cropping: 30 minutes
+- Validation: 5 fixed subject-wise folds (A-E)
+
+**Results**
+
+| Metric | Value |
+|---|---:|
+| Accuracy | 0.867 |
+| Cohen's kappa | 0.728 |
+| Macro-F1 | 0.667 |
+| Balanced accuracy | 0.662 |
+| Mean fold kappa | 0.729 |
+| SD fold kappa | 0.022 |
+
+**Kappa by fold**
+
+- Fold A: 0.750
+- Fold B: 0.692
+- Fold C: 0.731
+- Fold D: 0.727
+- Fold E: 0.743
+
+**Saved outputs**
+- `experiments\C10_68_crop30_LP40_relative_no_entropy_no_balance_fixed_AE.json`
+- `experiments\C10_68_crop30_LP40_relative_no_entropy_no_balance_fixed_AE_confusion.png`
+- Five fold JSON reports (A-E)
+
+---
+
