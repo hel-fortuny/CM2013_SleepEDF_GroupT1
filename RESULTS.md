@@ -370,3 +370,40 @@ Contributions from other team members will be added when their actual work is do
 
 ---
 
+
+
+## Experiment: C8_68_crop30_LP40_relativebands_no_balance_fixed_AE
+
+**Date:** 2026-11-13
+
+**Configuration**
+- Subjects: 68
+- Wake cropping: 30 minutes
+- Validation: 5 fixed subject-wise folds (A-E)
+
+**Results**
+
+| Metric | Value |
+|---|---:|
+| Accuracy | 0.870 |
+| Cohen's kappa | 0.733 |
+| Macro-F1 | 0.670 |
+| Balanced accuracy | 0.664 |
+| Mean fold kappa | 0.733 |
+| SD fold kappa | 0.024 |
+
+**Kappa by fold**
+
+- Fold A: 0.756
+- Fold B: 0.696
+- Fold C: 0.731
+- Fold D: 0.730
+- Fold E: 0.753
+
+**Saved outputs**
+- `experiments\C8_68_crop30_LP40_relativebands_no_balance_fixed_AE.json`
+- `experiments\C8_68_crop30_LP40_relativebands_no_balance_fixed_AE_confusion.png`
+- Five fold JSON reports (A-E)
+
+---
+
