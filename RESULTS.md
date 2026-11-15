@@ -5,28 +5,29 @@
 **Primary metric:** Cohen's kappa  
 **Evaluation mode:** new-subject  
 **Team:** Vicente Soares, Helena Fortuny, Dalya Yousif  
-**Last updated:** 2026-11-10
+**Last updated:** 2026-11-15
 
-## Current checkpoint — 2026-11-10
+## Current checkpoint — 2026-11-15
 
-The initial pilot and eight-subject exploration are kept below. Vicente has now completed **nine configurations on the 68-subject development cohort**. The final team pipeline has not been selected.
+Vicente has completed **17 configurations on the 68-subject development cohort**. The last planned exploratory comparison tested linear and nonlinear classifiers on the same frozen CBraMod features. The **CNN + Transformer5** leads on mean fold kappa. The next step is team selection and reproducible final training.
 
-| Phase | Evaluation | Completed configurations | Working reference |
-|---|---|---|---|
-| Earlier exploration | SC400–SC407; eight subject-wise LOSO folds | B0, F1, F2, C1, P1 | F2 on the eight-subject cohort |
-| Full development comparison | 68 subjects / 133 recordings; fixed subject folds A–E | B0_68, F2_68, LP40_68, C1_68, LR1_68, TC1_68, TC1_C1_68, SEL40_68, TC1_LP40_68 | **TC1_68 with Random Forest: mean fold kappa 0.751 ± 0.020** |
+| Phase | Evaluation | Current reference or candidate |
+|---|---|---|
+| Earlier exploration | SC400–SC407; eight subject-wise LOSO folds | F2 on the eight-subject cohort |
+| Engineered features | 68 subjects / 133 recordings; fixed subject folds A–E | F2 for single-epoch comparisons; TC1 for controlled temporal comparisons; **TC1 + sigma: 0.755 ± 0.018** |
+| Learned EEG features | Same 68 subjects, recordings, test epochs and A–E folds | **CNN + Transformer5: 0.774 ± 0.018**; CNN + LSTM5: 0.766 ± 0.033 |
+| EEG foundation model | Same development data; CBraMod frozen | Logistic regression: **0.6376 ± 0.0246**; MLP64: **0.6366 ± 0.0315**. Neither is shortlisted. |
 
-- **Common test set:** 360,621 retained epochs, including Wake. Each receives one out-of-fold prediction. All nine configurations use the same A–E test memberships. The ten reserved subjects remain unused.
-- **Shortlist:** TC1 uses 16 current and 16 previous consecutive same-recording features plus an availability flag. Against F2 it improves kappa in all five folds and 62/68 subjects. TC1 + training-only Wake crop has a close mean kappa (0.750 ± 0.026) and better pooled Macro-F1 (0.688 vs 0.677) and N1 recall (0.226 vs 0.153). Keep TC1 as the working reference and the crop as an alternative for team review.
-- **Filtering:** SEL40 with F2 helps some selected epochs but barely moves global kappa. The later **TC1 + LP40** run filters the EEG in every epoch and uses the same 33-feature context as TC1. It gives 0.751 ± 0.022 mean fold kappa, lower N1 F1 and a longer observed fit time (65.5 vs 35.9 min). Keep TC1 without the added filter. TC1 + SEL40 was not run.
-- **Evidence:** the archived notebook records the B0 consolidated save, and consolidated JSON/PNG saves are recorded for all nine configurations. The exact F2, TC1 and TC1 + crop JSON predictions were checked for the paired review. TC1 + LP40 is recorded from the executed notebook's outputs and save messages.
-- **Next priority:** write the report and review the two TC1 candidates with the team. Run another A–E comparison only if an outstanding candidate or requirement could change the final choice. The colleagues' shared EXP table still has unconfirmed fold membership.
-
-The reorganised Colab notebook restores the development arrays from cache with all training switches off by default; its results section can display F2 vs SEL40 without a fit. No final all-68 fit, team model commit, `EXPECTED_SCORE.md` commit or holdout prediction is recorded.
+- **Common evaluation:** 360,621 retained epochs, including Wake, with one out-of-fold prediction per epoch. Folds are split by subject. The ten reserved holdout subjects remain unused.
+- **What made the clearest difference:** keeping the CNN and LSTM architecture fixed, using up to four prior epochs improved kappa in all five folds (mean gain **+0.0370**), and raised N1 F1 from 0.3872 to 0.4548. Switching the five-epoch head from LSTM to Transformer gave a smaller mean gain (**+0.0078**), mainly in fold A; fold D worsened.
+- **Engineered alternatives:** TC1 + sigma gives the highest observed mean kappa among Vicente's Random Forest runs, but its gain over TC1 is small. AR(16) gives mixed fold changes. LP40 and SEL40 did not establish a clear overall gain. TC1 + training-only Wake crop remains a useful comparison for its N1 and Macro-F1 gains over TC1.
+- **Foundation model:** with identical averaged CBraMod features, the MLP improved N1 F1 (0.2882 → 0.2991) but did not improve mean kappa (0.6376 → 0.6366). Both variants were below CNN1's mean kappa of 0.7032. The experiment answers the classifier question for these pooled embeddings; patch sequences and fine-tuning remain future work.
+- **Team evidence:** the original EXP-00–03 table remains separate. The newer Helena and Dalya results are recorded below with their reported protocols and remaining checks. They are outside Vicente's 17-configuration count.
+- **Export status:** Colab reported saved JSON and confusion images for the completed additions. The F2, TC1 and TC1 + crop prediction files were inspected in the earlier paired review; the new scores below are transcribed from the supplied Colab outputs. The final all-68 fit, team model commit, `EXPECTED_SCORE.md` commit and holdout predictions remain pending.
 
 ### Current 68-subject comparison panel
 
-All rows below use the same 68 subjects, 133 recordings, A–E test memberships and complete 360,621-epoch test coverage. Only the two crop configurations reduce training epochs. Macro-F1, accuracy, balanced accuracy and N1 statistics are pooled out-of-fold values; mean kappa and SD refer to the five folds.
+These are Vicente's runs. All completed rows use the same 68 subjects, 133 recordings, A–E test memberships and complete 360,621-epoch test coverage. Only the two crop configurations reduce training epochs. Pooled scores combine all out-of-fold predictions; the fold mean and sample SD give each fold equal weight.
 
 | Experiment | Features | Mean fold kappa ± sample SD | Pooled kappa | Accuracy | Macro-F1 | Balanced accuracy | N1 recall | N1 F1 | Fit time (min) | Current role |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -35,12 +36,20 @@ All rows below use the same 68 subjects, 133 recordings, A–E test memberships 
 | LP40_68_fixed_AE | 16 | 0.736 ± 0.018 | 0.736 | 0.876 | 0.661 | 0.641 | 0.129 | 0.187 | 44.6 | Tested filter; not adopted |
 | C1_68_crop30_fixed_AE | 16 | 0.729 ± 0.024 | 0.729 | 0.868 | 0.666 | 0.653 | 0.195 | 0.241 | 20.0 | Training-selection alternative |
 | LR1_68_fixed_AE | 16 | 0.592 ± 0.024 | 0.591 | 0.768 | 0.600 | 0.705 | 0.456 | 0.259 | 2.8 | Classifier alternative; not adopted |
-| TC1_68_fixed_AE | 33 | **0.751 ± 0.020** | 0.751 | 0.883 | 0.677 | 0.654 | 0.153 | 0.223 | 35.9 | Current primary-metric reference |
-| TC1_C1_68_crop30_fixed_AE | 33 | 0.750 ± 0.026 | 0.750 | 0.879 | **0.688** | 0.672 | 0.226 | **0.282** | 14.5 | Alternative for Macro-F1/N1 trade-off |
+| TC1_68_fixed_AE | 33 | 0.751 ± 0.020 | 0.751 | 0.883 | 0.677 | 0.654 | 0.153 | 0.223 | 35.9 | Engineered temporal reference |
+| TC1_C1_68_crop30_fixed_AE | 33 | 0.750 ± 0.026 | 0.750 | 0.879 | 0.688 | 0.672 | 0.226 | 0.282 | 14.5 | Training-crop alternative to TC1 |
 | SEL40_68_fixed_AE | 16 | 0.736 ± 0.017 | 0.736 | 0.876 | 0.660 | 0.640 | 0.135 | 0.193 | 26.3 | Selective filter; local gain, not adopted |
 | TC1_LP40_68_fixed_AE | 33 | 0.751 ± 0.022 | 0.752 | 0.883 | 0.678 | 0.656 | 0.148 | 0.217 | 65.5 | Full EEG filtering with TC1; not adopted |
+| TC1_SIGMA_68_fixed_AE | 34 | 0.755 ± 0.018 | 0.756 | 0.885 | 0.681 | 0.658 | 0.157 | 0.230 | 57.3 | Highest mean kappa among Vicente's Random Forest runs |
+| TC1_AR16_68_fixed_AE | 33 | 0.753 ± 0.023 | 0.7532 | 0.8838 | 0.6800 | 0.6565 | 0.1621 | 0.2330 | 66.2 | Alternative spectral estimator; small mixed gain |
+| CNN1_68_fixed_AE | 64 learned / 1 epoch | 0.703 ± 0.035 | 0.703 | 0.841 | 0.687 | 0.768 | 0.627 | 0.366 | 12.2 | Single-epoch CNN reference |
+| CNN1_LSTM1_68_fixed_AE | 64 learned / 1 epoch | 0.7294 ± 0.0299 | 0.729 | 0.858 | 0.706 | 0.773 | 0.6194 | 0.3872 | 2.8 (head) | Control without previous epochs |
+| CNN1_LSTM5_68_fixed_AE | 64 learned / up to 5 epochs | 0.7664 ± 0.0335 | 0.765 | 0.879 | 0.739 | 0.804 | **0.6738** | **0.4548** | 2.9 (head) | Temporal reference; highest N1 F1 in this panel |
+| CNN1_TRANSFORMER5_68_fixed_AE | 64 learned / up to 5 epochs | **0.7742 ± 0.0180** | **0.774** | 0.883 | **0.748** | **0.806** | 0.6658 | 0.4527 | 4.8 (head) | Highest mean fold kappa so far |
+| CBRAMOD_LR_68_fixed_AE | 200 learned / 1 epoch | 0.6376 ± 0.0246 | 0.637 | 0.803 | 0.622 | 0.702 | 0.4618 | 0.2882 | 50.6 (LR) | Linear evaluation of frozen embeddings; not adopted |
+| CBRAMOD_MLP64_68_fixed_AE | 200 learned / 1 epoch | 0.6366 ± 0.0315 | 0.636 | 0.803 | 0.626 | 0.698 | 0.4962 | 0.2991 | 1.0 (MLP) | Nonlinear comparison on the same embeddings; not adopted |
 
-SD is the sample SD of the five fold scores. No significance or equivalence test was performed. TC1 and TC1 + crop have close primary scores but different class trade-offs. TC1 + LP40's pooled kappa rounds to 0.752 versus 0.751 for TC1; the difference computed before rounding prints as 0.000. Fitting times are observations from separate Colab runs, not a controlled timing benchmark.
+Reported precision is preserved. No significance or equivalence test was performed. Small observed differences are not proof of superiority. Fitting times are observations from separate Colab runs, not a controlled benchmark. The three head-only times exclude CNN training and feature extraction; the shared CBraMod extraction time of 3.9 min is excluded from both classifier fit times. The logistic regression ran on CPU and the MLP on GPU.
 
 ## Iteration log
 
@@ -61,8 +70,16 @@ SD is the sample SD of the five fold scores. No significance or equivalence test
 | 13 (TC1_C1_68) | 2026-11-02 | Revisited training-only Wake cropping with TC1's already-built 33-feature context matrix; kept sleep-window margins at 30 minutes and all A–E test epochs. | Mean fold kappa **0.750** (sample SD **0.026**); pooled kappa 0.750; macro-F1 **0.688**. | Primary mean kappa about -0.001 versus TC1, but macro-F1 +0.011, balanced accuracy +0.018 and N1 F1 +0.060 as printed. Kappa rises in 39/68 subjects. | **Keep TC1 as the kappa reference; preserve TC1 + crop as the Macro-F1/N1 alternative.** This is a completed combination, not an assumed sum of earlier effects. | Same course source, TC1 v1 and original-time crop rule; context built before training selection; five fold completions and consolidated JSON/PNG saves supplied; team commit not recorded. |
 | 14 (SEL40_68) | 2026-11-02; diagnosis consolidated 2026-11-04 | Applied the existing EEG-only LP40 recipe selectively when the epoch's 48–50 / 0.5–50-Hz power fraction is at least 10%; same F2 16-feature recipe, RF and full A–E sets. | Mean fold kappa **0.736** (sample SD **0.017**); pooled kappa 0.736; macro-F1 0.660. | Global gains versus F2 are about +0.001 kappa and Macro-F1; N1 F1 slightly lower. Selected-epoch kappa/Macro-F1 improve to 0.538/0.515, but five of the ten most-selected nights worsen. | **Do not adopt SEL40 as the reference.** Preserve the local benefits and mixed per-night effects. The later full LP40 + TC1 comparison is separate (iteration 15). | Selection/ratio version 1; 133 ratio records, 25,446 selected epochs and 74 validated LP40 cache reuses; JSON/PNG and later diagnostics-save messages supplied; team commit not recorded. |
 | 15 (TC1_LP40_68) | 2026-11-10 | Added the existing EEG-only LP40 to every epoch used by TC1; reused the 133 original LP40 feature caches. Same 33 feature columns, full training/test epochs, RF and A–E folds. | Mean fold kappa **0.751** (sample SD **0.022**; 5 folds); pooled kappa 0.752. | Mean kappa is unchanged at three decimals. Pooled Macro-F1 +0.001; N1 F1 0.223 → 0.217. Fold changes are mixed; five fits took 65.5 min versus 35.9 min for TC1. | **Retain TC1 without LP40.** The filter did not give a clear global benefit in the temporal pipeline. | Same pinned course SHA, TC1 v1 and LP40 v1 caches; five completed folds and consolidated JSON/PNG saves recorded. Team experiment commit not recorded. |
+| 16 (TC1 + sigma) | Recorded 2026-11-14 | Added one within-epoch STFT sigma concentration feature to TC1; tested whether short sigma events improve staging and reduce N1–N2 confusion. | Mean fold kappa 0.755 ± 0.018; pooled kappa 0.756; Macro-F1 0.681. | Higher kappa in 5/5 folds and 48/68 subjects versus TC1, but N1 → N2 rose from 29.12% to 29.55%. | Keep as the best observed RF result by mean kappa; retain TC1 as the simpler reference. | STFT v1 notebook cells 5.2–5.6; JSON/PNG saves reported; team experiment commit not recorded. |
+| 17 (TC1 + AR16) | Recorded 2026-11-14 | Replaced only the five absolute and five relative band-power features per current/previous epoch with Burg AR(16) estimates; retained the other TC1 features and tested an alternative to Welch. | Mean fold kappa 0.753 ± 0.023; pooled kappa 0.7532; Macro-F1 0.6800. | Pooled kappa +0.0018 versus TC1; mixed folds and 39/68 subjects higher. N1 F1 rose from 0.2227 to 0.2330. | Keep Welch as the spectral reference; preserve AR's class trade-offs. | Burg AR(16) v1 notebook cells 5.7–5.10; JSON/PNG saves reported; team experiment commit not recorded. |
+| 18 (CNN1) | 2026-11-14 | Trained a compact 1D CNN on one raw EEG Fpz-Cz epoch to test learned features on the same A–E split. | Mean fold kappa 0.703 ± 0.035; pooled kappa 0.703; Macro-F1 0.687. | Below F2 in kappa by 0.032; N1 recall rose from 0.135 to 0.627, with many more false N1 calls. F2 also uses EOG and EMG. | Retain as the learned single-epoch baseline and source of frozen features for the sequence models. | Notebook cells 5.11–5.14; five CNN checkpoints and JSON/PNG saves reported; team experiment commit not recorded. |
+| 19 (CNN + LSTM1) | 2026-11-14 | Trained a separate LSTM head on 64 frozen fold-specific CNN features; gave it only the current epoch to control for changing the prediction head. | Mean fold kappa 0.7294 ± 0.0299; pooled kappa 0.729; Macro-F1 0.706. | Higher than CNN1 in every fold, but mean kappa remains below F2. | Use as the control for the context comparison; this iteration alone does not demonstrate a context gain. | Notebook cells 5.15–5.16; five head checkpoints and JSON/PNG saves reported; team experiment commit not recorded. |
+| 20 (CNN + LSTM5) | 2026-11-14 | Used the same frozen CNN, LSTM and training settings as LSTM1 with up to four consecutive earlier epochs; retained shorter sequences at recording starts and gaps. | Mean fold kappa 0.7664 ± 0.0335; pooled kappa 0.765; Macro-F1 0.739. | Mean kappa +0.0370 versus LSTM1; 5/5 folds improve. N1 F1 +0.0676 and fewer false N1 from Wake and N2. | Carry forward as the direct comparator for the Transformer. | Notebook cells 5.15–5.16; five head checkpoints and JSON/PNG saves reported; team experiment commit not recorded. |
+| 21 (CNN + Transformer5) | 2026-11-14 | Replaced the LSTM5 head with one Transformer encoder layer, four attention heads and learned relative-to-current positions; same CNN weights, context and training settings. | Mean fold kappa 0.7742 ± 0.0180; pooled kappa 0.774; Macro-F1 0.748. | Mean kappa +0.0078 versus LSTM5; 4/5 folds higher, mainly fold A (+0.035); fold D lower. N1 F1 falls by 0.0021. | Leading development candidate; keep LSTM5 and the RF references for team review. | Notebook cells 5.17–5.18; five head checkpoints and JSON/PNG saves reported; team experiment commit not recorded. |
+| 22 (CBraMod + LR) | 2026-11-14 | Averaged the frozen CBraMod patch embeddings, then trained fold-fitted scaling and balanced L2 logistic regression to test whether the representations separate sleep stages with a linear classifier. | Mean fold kappa 0.6376 ± 0.0246; pooled kappa 0.637; Macro-F1 0.622. | Lower kappa in 5/5 folds versus CNN1 (mean delta −0.0656); pooled N1 F1 0.2882 versus 0.3664. | Preserve the completed linear evaluation. Keep Transformer5 as the leading candidate. | Notebook cells 5.19–5.21; upstream code and checkpoint revisions below; five fold reports and consolidated JSON/PNG saves reported; team experiment commit not recorded. |
+| 23 (CBraMod + MLP64) | 2026-11-15 | Recovered the exact same 200 frozen embeddings used by LR. Replaced the linear classifier with a 64-unit ReLU MLP to test whether nonlinear classification helps, using the same fold-fitted scaler and class-balancing rule. | Mean fold kappa 0.6366 ± 0.0315; pooled kappa 0.636; Macro-F1 0.626. | Mean fold kappa −0.0010 versus LR (3/5 folds improve); N1 F1 +0.0109. Both CBraMod variants are below CNN1 on mean kappa. | Keep as the last exploratory comparison; neither CBraMod head enters the shortlist. | Notebook cells 5.22–5.23; existing feature cache verified against the LR report; five fold completions and consolidated JSON/PNG saves supplied; team experiment commit not recorded. |
 
-The code revision above identifies the instructor's source used in Colab. It is not the team's experiment commit. Add the team commit after saving the executed notebook and this log in the team repository.
+Course starter code used in Colab: `5949b723bbd34d172f072446dfcb802ef54b49f7`. Notebook cells and upstream revisions identify implementation evidence; they are not team commits. Add the actual team commit after saving the executed code and this log in the repository.
 
 ## Iteration 1 — initial real-data baseline
 
@@ -2046,7 +2063,128 @@ Recomputed metrics from the saved F2, TC1 and TC1 + crop out-of-fold JSON predic
 
 The context gain is consistent across all five fold comparisons. The crop gives gains in N1 F1 in most subjects but much more variable changes in kappa (e.g. +0.149 for SC461 and -0.116 for SC435). Its small positive mean subject delta does not contradict the slightly lower mean fold kappa: the summaries aggregate different units. These are descriptive comparisons on the development set. The figure `SleepEDF_paired_kappa_68.png` shows the subject-level changes.
 
-## Team experiments relayed for discussion — protocol still to confirm
+## Iterations 16–17 — short sigma activity and alternative band-power estimation
+
+**TC1 + sigma (`TC1_SIGMA_68_fixed_AE`).** One column was added to TC1's 33 features. On the current 30-second Fpz-Cz epoch, a Hann STFT (1 s windows, 0.25 s step) estimated 11–16 Hz power. The feature is the largest sum over four consecutive time windows divided by total sigma power over the epoch's windows. It is a concentration measure, without event labels or a validated spindle detector. The pilot on one recording showed medians of 11.4% for N1 and 18.0% for N2; those values are exploratory. The same Random Forest and complete training/test epochs were used. All five fold kappas improved by about 0.001–0.009. N1 F1 rose 0.223 → 0.230, with N1 → Wake falling 41.69% → 40.92% and N1 → N2 rising 29.12% → 29.55%. The result therefore does not support the original hypothesis of reduced N1 → N2 confusion.
+
+**TC1 + AR16 (`TC1_AR16_68_fixed_AE`).** Used a fixed Burg autoregressive model of order 16 (PSD evaluated with a 1,024-point FFT grid) to recalculate the same five absolute and relative powers in both the current and previous epochs. Other features, including spectral entropy, and the availability flag were unchanged; the model still uses 33 columns. The pilot compared the AR and Welch curves in N1 and N2. Across the cohort, pooled kappa rose 0.7514 → 0.7532 and N1 F1 0.2227 → 0.2330. N1 → N2 fell 29.12% → 28.75%; N1 → Wake fell 41.69% → 41.03%; N3 F1 declined by 0.0029. Fold D lost kappa. Neither the small aggregate gain nor the observed fit times justify replacing Welch in the reference.
+
+| Fold | TC1 | TC1 + sigma | TC1 + AR16 |
+|---|---:|---:|---:|
+| A | 0.774 | 0.775 | 0.776 |
+| B | 0.732 | 0.741 | 0.733 |
+| C | 0.749 | 0.753 | 0.751 |
+| D | 0.731 | 0.734 | 0.729 |
+| E | 0.770 | 0.773 | 0.776 |
+
+Fold scores are displayed as printed. Differences computed before rounding can differ from subtraction of these cells. The completed JSON and confusion PNG for each model are listed below; per-recording feature caches are in `CM2013_data/cache/viggy/sigma_stft_v1` and `CM2013_data/cache/viggy/ar_burg16_v1`.
+
+## Iteration 18 — single-epoch CNN on Fpz-Cz
+
+One 30-second epoch supplies 3,000 samples of Fpz-Cz at 100 Hz. Input is scaled by a fixed 100 µV, with no extra filter, no crop and no second modality. The model uses three Conv1d blocks with batch normalization and ReLU, temporal pooling and a 64-value embedding followed by a linear classifier. The T4 pilot checked the forward pass and a weight update using training rows only. For each fold: 12 passes, batch size 256, AdamW (learning rate 0.001, weight decay 0.0001), seed 0, and cross-entropy weights derived from training stage counts. The CNN, including batch normalization, was evaluated in inference mode. The EEG cache was checked for row/label alignment across 133 recordings.
+
+Compared with F2, CNN1's balanced accuracy rose 0.638 → 0.768 and N1 F1 rose 0.195 → 0.366. N1 precision was 0.259; N2 → N1 increased from about 2.3% to 17.4% of true N2 epochs. Kappa fell in 42/68 subjects; fold A scored 0.648. These are pipeline results: F2 has engineered EEG, EOG and EMG features, while the CNN receives only EEG.
+
+## Iterations 19–21 — controlled comparison of temporal heads
+
+Each fold reuses its own CNN1 encoder in evaluation mode with frozen weights. It supplies 64 features per epoch. LSTM1 reads the current epoch only; LSTM5 reads it and up to four consecutive earlier epochs from the same recording. The lengths of the 360,621 windows, from one through five valid epochs, were **264 / 262 / 259 / 259 / 359,577**. Short windows were kept and padded on the right. The LSTM uses the state at the last valid epoch. Transformer5 reads the same windows with learned position embeddings relative to the current epoch, masks the padding and uses the current epoch's output. The small Transformer has one encoder layer, four attention heads, model dimension 64, feed-forward dimension 128 and no dropout. A pilot checked that changing the padded values did not change the output. All three heads used the same fixed 12-pass schedule, class weighting, seed and optimizer settings; the reserved subjects were excluded.
+
+| Fold | CNN1 | LSTM1 | LSTM5 | Transformer5 | LSTM5 − LSTM1 | Transformer5 − LSTM5 |
+|---|---:|---:|---:|---:|---:|---:|
+| A | 0.648 | 0.677 | 0.708 | 0.743 | +0.031 | +0.035 |
+| B | 0.698 | 0.743 | 0.772 | 0.777 | +0.029 | +0.005 |
+| C | 0.743 | 0.752 | 0.785 | 0.789 | +0.033 | +0.004 |
+| D | 0.720 | 0.736 | 0.791 | 0.781 | +0.055 | -0.010 |
+| E | 0.707 | 0.739 | 0.776 | 0.781 | +0.037 | +0.005 |
+
+| Pooled N1 diagnostic | LSTM1 | LSTM5 | Transformer5 |
+|---|---:|---:|---:|
+| Precision | 0.2816 | 0.3432 | 0.3430 |
+| Recall | 0.6194 | 0.6738 | 0.6658 |
+| F1 | 0.3872 | 0.4548 | 0.4527 |
+| W → N1 (% of true W) | 5.1772 | 4.3863 | 4.4721 |
+| N2 → N1 (% of true N2) | 17.8332 | 15.1172 | 14.6097 |
+
+The LSTM1 → LSTM5 comparison isolates the addition of past EEG epochs with the same recurrent head design. The Transformer comparison changes the head, so the difference does not isolate an individual attention component. The Transformer led on mean kappa and Macro-F1. Its N1 F1 was slightly lower than LSTM5's, and fold D lost kappa. It improved kappas for **47/68** participants versus **F2**, not versus LSTM5. The reported fold SD and paired deltas describe this development split; no paired inference or repeat-seed run has been reported.
+
+### Completed Colab exports since iteration 15
+
+Paths are relative to `CM2013_data/experiments/`. Each experiment has the corresponding `_fold_A.json` through `_fold_E.json` reports. The CNN runs also saved per-fold `.pt` weights for the trained CNN or sequence head; the heads require the matching CNN1 checkpoint.
+
+| Experiment | Consolidated report | Confusion matrix |
+|---|---|---|
+| TC1 + sigma | `TC1_SIGMA_68_fixed_AE.json` | `TC1_SIGMA_68_fixed_AE_confusion.png` |
+| TC1 + AR16 | `TC1_AR16_68_fixed_AE.json` | `TC1_AR16_68_fixed_AE_confusion.png` |
+| CNN1 | `CNN1_68_fixed_AE.json` | `CNN1_68_fixed_AE_confusion.png` |
+| CNN + LSTM1 | `CNN1_LSTM1_68_fixed_AE.json` | `CNN1_LSTM1_68_fixed_AE_confusion.png` |
+| CNN + LSTM5 | `CNN1_LSTM5_68_fixed_AE.json` | `CNN1_LSTM5_68_fixed_AE_confusion.png` |
+| CNN + Transformer5 | `CNN1_TRANSFORMER5_68_fixed_AE.json` | `CNN1_TRANSFORMER5_68_fixed_AE_confusion.png` |
+
+## Iteration 22 — frozen CBraMod representations with logistic regression
+
+CBraMod's official generic checkpoint was used as a frozen EEG feature extractor. [The CBraMod paper](https://proceedings.iclr.cc/paper_files/paper/2025/file/bbbd6d915cb90be21c1254a82d45cedd-Paper-Conference.pdf) documents TUEG as the pretraining corpus and ISRUC as its downstream sleep experiment; the generic checkpoint was selected to avoid known Sleep-EDF overlap. We rely on this documented corpus provenance rather than a subject-identity audit. The [code revision](https://github.com/wjq-learning/CBraMod/tree/b9e961003214326972c567eff390e75b0287e32a) and [released checkpoint revision](https://huggingface.co/weighting666/CBraMod/commit/6d032ec37de981d90d6c37fb6539ac37a3325550) are pinned in the notebook.
+
+Fpz-Cz at 100 Hz was resampled to 200 Hz with a polyphase FIR so each 30-second epoch could be passed as 30 one-second patches. This does not recover frequencies absent from the original recording. After fixed amplitude scaling (100 µV), the frozen encoder gives one 200-dimensional vector per patch. Averaging the 30 vectors yields 200 features per epoch. The eight-epoch pilot passed and extraction completed for all 133 recordings in **3.9 min**. The resulting matrix is `(360621, 200)`, float32, in `CM2013_data/cache/viggy/cbramod_mean_v1/8aa24a7069eada8d0a9e`.
+
+Cell 5.21 fitted a StandardScaler and L2 multinomial logistic regression (lbfgs, C=1, balanced class weights, max_iter=2000, tol=1e-4) using only the training participants in each A–E fold. No previous-epoch context or Wake crop was used. CNN1 is the direct pipeline comparator: it uses the same Fpz-Cz channel, current 30-second epoch and subject folds.
+
+| Fold | CNN1 kappa | CBraMod + LR kappa | Δkappa vs CNN1 | CBraMod + LR Macro-F1 | Accuracy | Balanced accuracy | LR fit (min) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| A | 0.648 | 0.622 | −0.026 | 0.594 | 0.799 | 0.690 | 9.875 |
+| B | 0.698 | 0.602 | −0.096 | 0.607 | 0.773 | 0.690 | 10.102 |
+| C | 0.743 | 0.654 | −0.089 | 0.637 | 0.813 | 0.711 | 10.426 |
+| D | 0.720 | 0.651 | −0.069 | 0.634 | 0.818 | 0.691 | 10.281 |
+| E | 0.707 | 0.659 | −0.048 | 0.643 | 0.812 | 0.729 | 9.897 |
+
+| Metric | CNN1 | CBraMod + LR |
+|---|---:|---:|
+| Mean fold kappa ± sample SD | 0.7032 ± 0.0352 | 0.6376 ± 0.0246 |
+| Pooled kappa | 0.703 | 0.637 |
+| Pooled Macro-F1 | 0.687 | 0.622 |
+| Pooled accuracy | 0.841 | 0.803 |
+| Pooled balanced accuracy | 0.768 | 0.702 |
+| Pooled N1 precision | 0.2587 | 0.2095 |
+| Pooled N1 recall | 0.6273 | 0.4618 |
+| Pooled N1 F1 | 0.3664 | 0.2882 |
+
+The mean kappa fell by **0.0656** versus CNN1, with lower kappa in all five folds. Compared separately with F2, N1 recall was higher (0.462 vs 0.135) and balanced accuracy rose (0.702 vs 0.638), but pooled kappa fell by 0.098 and 57 of 68 subject kappas decreased. The matrix shows that 7.5% of true Wake and 24.9% of true REM epochs were predicted as N1, compared with 0.7% and 6.1% for F2. Against the earlier engineered-feature logistic regression (LR1, mean fold kappa 0.592 ± 0.024), this linear pipeline had a higher observed mean kappa. That comparison changes the input representation and modalities and does not isolate pretraining. The five CPU fits took **50.6 min**, in addition to the **3.9 min** spent extracting frozen features on the GPU.
+
+**Decision:** do not shortlist this CBraMod + LR configuration. The result applies to averaged embeddings and a linear classifier on Fpz-Cz. It does not determine whether a nonlinear head, retaining the sequence of patch embeddings or fine-tuning would help. Iteration 23 tests a nonlinear classifier on the same cached features and folds. Isolating pretraining itself would require matched encoders with and without pretrained weights.
+
+**Exports:** Colab reported saving the fold results and consolidated `CBRAMOD_LR_68_fixed_AE.json` and `CBRAMOD_LR_68_fixed_AE_confusion.png` under `CM2013_data/experiments/`. Scores above are from the supplied output; the new JSON predictions were not independently inspected.
+
+## Iteration 23 — frozen CBraMod representations with a small MLP
+
+The last planned development experiment tests whether a nonlinear classifier can improve on the CBraMod logistic regression (LR). The cache was restored for the 133 recordings and checked against the LR report's data checksum. Both variants used the same 200 mean patch embeddings from the current 30-second Fpz-Cz epoch, the same retained epochs and subject folds A–E, and identical StandardScaler settings. The scaler and balanced class weights were fitted on each fold's training participants. No holdout data, previous epochs or additional filtering were introduced.
+
+The classifier is a **200 → 64 → 5 MLP** with ReLU, trained using weighted cross-entropy and AdamW (learning rate 0.001, weight decay 0.0001, batch size 1,024, seed 0). It used 20 fixed passes without early stopping. The encoder was frozen and no embeddings were recomputed. The comparison changes the classifier and its optimisation, so it does not isolate either effect separately.
+
+| Fold | LR kappa | MLP kappa | Δkappa (MLP − LR) | MLP Macro-F1 | Accuracy | Balanced accuracy | MLP fit (min) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| A | 0.622 | 0.592 | −0.030 | 0.576 | 0.782 | 0.675 | 0.334 |
+| B | 0.602 | 0.615 | +0.013 | 0.629 | 0.784 | 0.691 | 0.171 |
+| C | 0.654 | 0.661 | +0.007 | 0.642 | 0.817 | 0.713 | 0.177 |
+| D | 0.651 | 0.662 | +0.011 | 0.639 | 0.826 | 0.694 | 0.187 |
+| E | 0.659 | 0.653 | −0.006 | 0.647 | 0.810 | 0.720 | 0.181 |
+
+| Metric | CBraMod + LR | CBraMod + MLP64 |
+|---|---:|---:|
+| Mean fold kappa ± sample SD | 0.6376 ± 0.0246 | 0.6366 ± 0.0315 |
+| Pooled kappa | 0.637 | 0.636 |
+| Pooled Macro-F1 | 0.622 | 0.626 |
+| Pooled accuracy | 0.803 | 0.803 |
+| Pooled balanced accuracy | 0.702 | 0.698 |
+| Pooled N1 precision | 0.2095 | 0.2141 |
+| Pooled N1 recall | 0.4618 | 0.4962 |
+| Pooled N1 F1 | 0.2882 | 0.2991 |
+
+The MLP improved kappa in three folds, but the decreases in A (−0.030) and E (−0.006) outweighed those gains. Its pooled N1 recall rose **3.44 percentage points** and N1 F1 rose **0.0109**. The confusion matrices also show more true N2 and REM epochs called N1 than with LR (11.6% → 13.8% and 24.9% → 26.5%, respectively, from the rounded matrix cells). The reported subject counts (10 higher, 58 lower) are relative to **F2**, not to CBraMod + LR. MLP fitting took approximately **1.0 min on GPU**; LR took **50.6 min on CPU**. The measured times cover classifier fitting only and do not constitute a controlled speed comparison.
+
+**Decision:** the small MLP did not improve the primary metric on the pooled CBraMod features. Neither foundation-model variant reaches CNN1's mean fold kappa (0.7032). Close the planned exploratory experiments and retain CNN + Transformer5 as the leading candidate (0.7742 ± 0.0180), pending team selection. No conclusion is drawn about other CBraMod representations, sequence models or fine-tuning.
+
+**Exports:** Colab reported all five fold completions and saved `CBRAMOD_MLP64_68_fixed_AE.json` and `CBRAMOD_MLP64_68_fixed_AE_confusion.png` under `CM2013_data/experiments/`. Results are transcribed from the supplied outputs; the new JSON predictions have not been independently inspected.
+
+## Earlier team experiments — protocol not confirmed
 
 Vicente supplied the following colleagues' table after the selective-filter review. These are **reported team results**, not additional verified A–E evaluations in Vicente's iteration count. The table did not identify the individual author or provide feature/classifier definitions, fold memberships, exact prediction arrays or full metric spread.
 
@@ -2060,6 +2198,42 @@ Vicente supplied the following colleagues' table after the selective-filter revi
 The reported bandpass scores differ little from their reported baseline, but the unseen code and protocol have not been audited. The wavelet score cannot establish superiority over a 68-subject pipeline because cohort and evaluation differ. The table's kappa aggregation and fold SDs were not supplied; do not invent them.
 
 **Pending confirmation:** retrieve each experiment's actual test-subject list for every fold and compare sets with A–E, allowing only fold-order/name permutations. Sixty-eight subjects, five folds and seed 0 do not guarantee the same membership. The older supplied lists demonstrably differ from A–E, but it is unknown whether the subsequently shared EXP table still uses them or has been updated. Confirm common test epochs and feature/classifier controls as well. Listing saved memberships does not require new fits; only candidates requiring re-evaluation need new A–E fits. Keep these results labelled unconfirmed until then.
+
+## Later team experiments — reported by Helena and Dalya
+
+These are the latest tables relayed by Vicente, recorded separately from his individual iteration series. Unless stated otherwise the tables list 68 subjects and 133 recordings. Actual saved test predictions and team commits were not supplied for this update.
+
+### Helena Fortuny — training selection, filtering and feature removal
+
+Vicente confirmed that Helena's newer C2–C10 runs use the shared subject folds. Test-epoch coverage and model settings should still be checked against the saved reports before any pooled or paired team comparison. All these rows list a 30-minute Wake crop and Welch features. C2 explicitly reports cropping only the training data; verify that scope and the full test coverage for each later variant.
+
+| Reported ID | Modification / feature set | Mean fold kappa ± SD | Reported pooled kappa | Accuracy | Macro-F1 | Balanced accuracy |
+|---|---|---:|---:|---:|---:|---:|
+| C2_68_crop30_fixed_AE | Crop only; 11 original; balanced and seed 0 marked for verification | 0.724 ± 0.022 | 0.724 | 0.866 | 0.657 | 0.643 |
+| C3_68_crop30_fixed_AE | Band-pass 0.5–40 Hz + crop; 11 original; balanced | 0.724 ± 0.022 | 0.724 | 0.866 | 0.659 | 0.647 |
+| C4_68_crop30_LP40_fixed_AE | LP40 + crop; 11 original; balanced | 0.725 ± 0.022 | 0.724 | 0.866 | 0.660 | 0.649 |
+| C5_68_crop30_LP40_balanced_subsample_fixed_AE | C4 setup with balanced_subsample; 11 original | 0.724 ± 0.022 | 0.724 | 0.866 | 0.660 | 0.649 |
+| C6_68_crop30_LP40_no_balance_fixed_AE | LP40 + crop; 11 original; no class weighting | 0.726 ± 0.019 | 0.725 | 0.866 | 0.665 | 0.658 |
+| C7_68_crop30_LP40_14features_no_balance_fixed_AE | Added SEF95, theta/alpha and delta/theta; 14 features | 0.728 ± 0.024 | 0.727 | 0.867 | 0.665 | 0.658 |
+| C8_68_crop30_LP40_relative_only_no_balance_fixed_AE | Replaced absolute powers with relative powers in the 11-feature set | **0.733 ± 0.024** | 0.733 | 0.870 | 0.670 | 0.664 |
+| C9_68_crop30_LP40_relative_no_activity_no_balance_fixed_AE | Removed Hjorth activity from C8; 10 features | 0.707 ± 0.030 | 0.706 | 0.857 | 0.627 | 0.619 |
+| C10_68_crop30_LP40_relative_no_entropy_no_balance_fixed_AE | Removed spectral entropy from C8; 10 features | 0.729 ± 0.022 | 0.728 | 0.867 | 0.667 | 0.662 |
+
+C8 gives Helena's highest observed kappa. Removing Hjorth activity or spectral entropy lowers mean kappa in this pipeline; the decline is larger for activity. The result does not establish that either feature has the same effect in TC1 or in a neural model. The source spreadsheet lists `C1_68_crop30_fixed_AE_confusion.png` for C2 and `C8_68_crop30_LP40_no_balance_fixed_AE_confusion.png` for C6; verify both filenames and the meaning of “AE” in the C3/C4 feature-selection column before reuse.
+
+### Dalya Yousif — signal screening and changes to TC1 + crop
+
+| Reported ID | Modification | Mean fold kappa ± SD | Reported pooled kappa | Accuracy | Macro-F1 | Balanced accuracy |
+|---|---|---:|---:|---:|---:|---:|
+| WAV-68-01 | EEG-only db4 wavelet soft thresholding; 11 baseline features; rejected | — | 0.6784 | 0.8374 | 0.6467 | — |
+| SWF-01 | Exploratory slow-wave fraction (0.5–2 Hz), 3 subjects / 5 recordings | — | — | — | — | — |
+| ALPHA-01 | Exploratory alpha occupancy (8–13 Hz); sample count not reported | — | — | — | — | — |
+| 01_transition_N1_bridge | Reclassified N1–N2–N1 gaps using a future prediction; 213 predictions changed | 0.750266 ± 0.025928 | 0.749783 | 0.878723 | 0.688705 | 0.672770 |
+| 02_relative_temporal_delta | Added five current-minus-previous relative powers to TC1 + crop; 38 features | 0.749594 ± 0.025869 | 0.749107 | 0.878454 | 0.687657 | 0.671909 |
+| 04_n1_weight15 | Multiplied N1 sample weights by 1.5 on top of balanced RF | 0.749608 ± 0.026687 | 0.749103 | 0.878468 | 0.686622 | 0.671203 |
+| TC1_C1_YASA_Spindles_68_AE | Added four YASA features: count, mean duration, amplitude and frequency; 37 total | 0.749236 ± 0.025973 | 0.748767 | 0.878188 | 0.687821 | 0.672719 |
+
+The table marks A–E for the four TC1 + crop variants. The wavelet row specifies five fixed subject-wise folds without an assignment, so equivalence to A–E has not been checked; its kappa (0.6784) is transcribed as reported because its aggregation was unspecified. The YASA row reports a fit time of 26.3 min. Seed is 0 for the wavelet and YASA rows and is unverified for the three other TC1 + crop variants. The bridge produced only a negligible kappa change against TC1 + crop (recomputed pooled reference about 0.749713), and uses a future epoch. None of the four reported variants shows a clear improvement over the TC1 + crop reference. The slow-wave and alpha rows are diagnostics rather than model evaluations.
 
 ## Archived proposal M1 — eight-subject classifier comparison (not executed)
 
@@ -2095,7 +2269,7 @@ Proposed on 2026-10-27 after completing the P1 review; **not executed or scored*
 | Classifier / fitted steps | Keep fold-fitted StandardScaler and 200-tree balanced RF, seed 0, n_jobs=-1 | LR1's balanced logistic regression was evaluated on unchanged features/folds: mean kappa 0.592 ± 0.024 vs F2 0.735 ± 0.017; 63/68 subject kappas decline. Faster fitting and higher balanced accuracy/N1 F1 do not replace the primary-metric decision. |
 | Reporting / final evaluation | Fold mean/sample SD, pooled/class panel, paired subject and confusion review | F2/LP40/C1/LR1 consolidated exports confirmed; B0's optional consolidated export unconfirmed. LR1 includes solver/convergence records and paired comparisons. Save notebook/log and record the team commit. No all-68 final fit or holdout predictions yet. |
 
-## Current decision log — 2026-11-10
+## Archived decision log — 2026-11-10
 
 | Module | Current choice | Evidence / unresolved question |
 |---|---|---|
@@ -2106,6 +2280,16 @@ Proposed on 2026-10-27 after completing the P1 review; **not executed or scored*
 | Signal diagnosis | Retain high-frequency and slow-variation checks as diagnostic evidence | High-frequency ratio audited across 133 nights; the mask selected 25,446 epochs. Slow variation was inspected in three nights only; no high-pass model was fitted. Neither diagnostic is artifact ground truth. |
 | Team choice | Shortlist TC1 and TC1 + crop; write up results now | Verify fold memberships and test coverage for any colleague candidate that could affect selection. A new run is optional and should answer a specific question on A–E. |
 | Reproducibility and submission | Pin final code, refit the chosen pipeline on all 68, commit `EXPECTED_SCORE.md` before holdout predictions | JSON/PNG saves are recorded for the nine development runs; exact F2, TC1 and TC1 + crop reports were checked. Team experiment/final commit, reproducible inference and holdout prediction remain pending. |
+
+## Current decision log — 2026-11-15
+
+| Decision | Evidence / next action |
+|---|---|
+| Keep Transformer5 as leading development candidate | Highest observed mean fold kappa (0.7742 ± 0.0180) and pooled Macro-F1 (0.748). Its improvement over LSTM5 is small and concentrated largely in fold A. |
+| Retain LSTM5 and the engineered temporal references | LSTM5 demonstrates the clearest controlled context gain and slightly higher N1 F1 than Transformer5. TC1 + sigma has the highest observed kappa in the RF series; TC1 remains the matched reference for the sigma, AR and filtering tests. |
+| Isolate what each comparison can show | CNN1 vs F2 changes the input modalities and model. LSTM1 vs LSTM5 holds the EEG encoder, recurrent head design and training recipe fixed. A different sequence head tests a different architecture. Report full test coverage and fold spread alongside pooled metrics. |
+| Close the planned exploratory runs with the CBraMod comparison | The nonlinear MLP did not improve mean kappa on the same embeddings. Keep both CBraMod runs for the report. Check saved memberships and test order for any team result considered for final selection. |
+| Keep the final holdout separate | Select and reproduce the final pipeline before using any reserved subject. Record the team code commit and commit `EXPECTED_SCORE.md` before predicting the holdout. |
 
 ## Revisions
 
@@ -2132,6 +2316,10 @@ On 2026-11-10 **the full LP40 filter was revisited with the temporal model**. Th
 
 The notebook was reorganised into daily setup, saved results, optional training, diagnostics and archive sections. The missing `RUN_TC1_LP40_68 = False` default was added; ordinary setup no longer starts the LP40 combination or rewrites experiment reports. The F2 vs SEL40 matrix can be viewed from saved predictions. This reorganisation and the paired review do not add new training iterations.
 
+On 2026-11-14 the development series was extended to short-time EEG features, Burg AR and learned EEG features. The controlled LSTM comparison confirmed the value of past epochs with a learned representation. Transformer5 then became the leading candidate by mean fold kappa; it has not been selected as the final team model. The CBraMod linear evaluation was completed and fell below CNN1 in all five folds; the result did not change the development shortlist. The newer Helena and Dalya tables are now recorded separately from the earlier unconfirmed EXP table.
+
+On 2026-11-15 the CBraMod embeddings were reused for a 64-unit MLP. Higher N1 F1 did not translate into higher mean kappa: 0.6366 versus 0.6376 for logistic regression. This closes the planned exploratory comparisons; the leading development candidate and the reserved holdout are unchanged.
+
 ## Contributions recorded so far
 
 | Iteration | Person | Observed work | Review |
@@ -2157,17 +2345,21 @@ The notebook was reorganised into daily setup, saved results, optional training,
 | Paired review and notebook update | Vicente Soares, assisted by ChatGPT | Supplied the F2/TC1/crop JSON files for alignment checks and the paired subject review. Reorganised the notebook with training off by default and separate read-only matrix display. | No new fitting or independent team review. |
 | Later team experiment table | Colleagues not individually identified in the supplied table; relayed by Vicente | Shared EXP-00/01/02 results on 68 subjects and EXP-03 wavelet results on four subjects. Vicente clarified that current fold usage is uncertain. These remain separate reported team results, not additional verified A–E runs in Vicente's count. | Authors, actual memberships, test coverage and feature/classifier controls still to confirm. |
 | Earlier team split documentation | Colleague (not identified in the supplied message); relayed by Vicente | Supplied the earlier five-fold train/test subject memberships. The lists were checked and retained separately from A–E; no colleague score is reclassified as an A–E result. | Split-list consistency checked; the unseen colleague pipeline was not audited. |
+| 16–17 (sigma and AR) | Vicente Soares | Ran diagnostic and extraction cells, five fixed-fold fits per variant, and supplied metrics, class effects, confusion images and save confirmations. Code, interpretation and log preparation were assisted by ChatGPT. | No independent review of the new export files recorded. |
+| 18–21 (CNN, LSTM and Transformer) | Vicente Soares | Ran GPU pilots; verified aligned raw EEG; completed the fixed-fold CNN, LSTM controls and Transformer comparison and supplied results, checkpoint confirmations and confusion images. Code, interpretation and log preparation were assisted by ChatGPT. | Candidate selection with the team is pending. |
+| 22 (CBraMod) | Vicente Soares | Confirmed the official checkpoint pilot, extracted features for all 133 recordings, completed five logistic-regression fits and supplied the CNN1 comparison, confusion matrix and save confirmations. Code, verification and log preparation were assisted by ChatGPT. | No independent inspection of the new JSON predictions recorded. |
+| 23 (CBraMod + MLP64) | Vicente Soares | Restored the same cached embeddings, ran the five GPU fits and supplied the fold/pooled comparison against LR, the F2 confusion figure and save confirmations. Code, verification and log preparation were assisted by ChatGPT. | No independent inspection of the new JSON predictions recorded. |
+| C2–C10 | Helena Fortuny; results relayed by Vicente | Reported training-only Wake cropping, filter and class-weight comparisons, and feature replacement/removal experiments on fixed folds. | Confirm saved evaluation coverage, exact configs and filenames as needed. |
+| Wavelet, screening and TC1 + crop extensions | Dalya Yousif; results relayed by Vicente | Reported wavelet denoising, exploratory signal descriptors, a prediction bridge, temporal deltas, N1 weighting and YASA spindle features. | Fold and evidence limits are recorded above. |
 
 Further contributions and result reviews from named team members will be added when supplied.
 
-## Next steps and missing evidence — updated 2026-11-10
+## Next steps and missing evidence — updated 2026-11-15
 
-1. **Write the report now.** Use the eight-subject phase as exploration and the nine A–E configurations as the controlled comparison. Highlight the consistent F2 → TC1 gain, the Wake-crop trade-off after context was added, and the small gains from filtering. Use the paired and confusion figures to show where the scores changed.
-2. **Review the shortlist with the team.** TC1 is the working reference; TC1 + training-only Wake crop is the Macro-F1/N1 alternative. Compare any colleague candidate's actual test-subject memberships and epoch coverage with A–E. Repeat a selected comparison on A–E only if it could change the final choice or fills a specific course requirement. Keep all ten reserved subjects out of development.
-3. **Make the selected pipeline reproducible.** Commit the executed development code and this log, record the team experiment/model revision, and provide a README and pinned environment. Reproduce training and inference with the same feature order and TC1 adjacency/gap rules. If the crop is selected, apply it only in training; inference keeps every required epoch. The original course adapter does not automatically build the custom features.
-4. **Freeze the final method and refit on all 68 development subjects.** Record the selected cross-validated mean ± SD, subject split and final-model code commit in `EXPECTED_SCORE.md`, and commit it **before** generating holdout predictions.
-5. **Generate the submission once the preceding steps are complete.** Use the course holdout and submission helpers with the frozen pipeline for the published ten subjects. Do not score the holdout or change the model based on it. Submit the team report, repository link and `predictions.csv`.
+1. **Close the planned exploration and bring the shortlist to the team.** Recommend CNN + Transformer5 for its mean fold kappa; retain LSTM5 and TC1 + sigma as the temporal and Random Forest comparisons. Record the two CBraMod variants and leave patch-level models and fine-tuning for future work.
+2. **Write and review the report with the team.** Present the early eight-subject exploration and the 68-subject controlled comparisons separately. Highlight the F2 → TC1 and LSTM1 → LSTM5 context comparisons, the smaller Transformer5 gain, and the filtering and N1 trade-offs. Confirm the team shortlist using the actual saved folds and test coverage.
+3. **Reproduce the chosen pipeline before the holdout.** Commit the code and this log, record the team experiment and final model revision, and provide a README and locked environment. For a temporal neural model, implement the same signal scale, recording/gap rules, class order and full-epoch inference in the course submission path. Check this path on development data.
+4. **Freeze the method and refit on all 68 development subjects.** Record the selected cross-validated mean ± SD, the subject split unit and the final model commit in `EXPECTED_SCORE.md`. Commit it before generating holdout predictions.
+5. **Generate the submission with the frozen pipeline.** Use the course holdout and submission helpers for the ten reserved subjects. Do not score the holdout or modify the model based on it. Submit the PDF report, repository link and `predictions.csv`.
 
-Remaining checks include peer review and team commit IDs, the exact TC1 + LP40 report if needed for participant-level inspection, and the final reproducible inference path. The reported Colab results do not establish a final all-68 fit, an expected-score commit or a holdout submission.
-
-**Current status:** nine completed 68-subject configurations, plus the earlier eight-subject exploration. Prioritise reporting and team selection; reopen development only for a comparison that can inform that decision.
+**Current status:** 17 completed 68-subject configurations in Vicente's series. Planned exploration is complete and Transformer5 leads. Team model selection, a development-only inference check, the final refit and the holdout submission are pending.
