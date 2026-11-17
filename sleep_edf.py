@@ -107,7 +107,27 @@ class SleepEDFTrack(TrackAdapter):
         """Median of per-epoch 50-Hz ratios (descriptive only)."""
         ratios = SleepEDFTrack.epoch_50hz_ratios(rec)
         return float(np.median(ratios)) if len(ratios) else 0.0
+    
+    @staticmethod
+    def add_previous_epoch(X, recording_ids):
+        """Append the previous epoch's features (same recording) + availability flag.
 
+        Uses features only, never labels. Rows must be in time order,
+        one contiguous block per recording.
+        """
+        X = np.asarray(X)
+        recording_ids = np.asarray(recording_ids)
+        n_blocks = 1 + np.sum(recording_ids[1:] != recording_ids[:-1])
+        if n_blocks != len(np.unique(recording_ids)):
+            raise ValueError("recordings are not contiguous; cannot add previous-epoch context")
+
+        X_prev = np.zeros_like(X)
+        has_prev = np.zeros((len(X), 1))
+        same_rec = recording_ids[1:] == recording_ids[:-1]
+        X_prev[1:][same_rec] = X[:-1][same_rec]
+        has_prev[1:][same_rec] = 1.0
+        return np.hstack([X, X_prev, has_prev])
+    
     # ---- module 2: PREPROCESSING (opt-in; the recipe is your decision) ----
     def preprocess(self, rec: Recording, cfg=None) -> Recording:
         """Identity by default — the supplied baseline scores the epochs as loaded,
