@@ -592,3 +592,40 @@ Contributions from other team members will be added when their actual work is do
 
 ---
 
+
+
+## Experiment: C13_68_crop30_selectiveLP40_relative_prev1next1_no_balance_fixed_AE
+
+**Date:** 2026-11-17
+
+**Configuration**
+- Subjects: 68
+- Wake cropping: 30 minutes
+- Validation: 5 fixed subject-wise folds (A-E)
+
+**Results**
+
+| Metric | Value |
+|---|---:|
+| Accuracy | 0.882 |
+| Cohen's kappa | 0.757 |
+| Macro-F1 | 0.694 |
+| Balanced accuracy | 0.684 |
+| Mean fold kappa | 0.757 |
+| SD fold kappa | 0.026 |
+
+**Kappa by fold**
+
+- Fold A: 0.785
+- Fold B: 0.724
+- Fold C: 0.754
+- Fold D: 0.743
+- Fold E: 0.782
+
+**Saved outputs**
+- `experiments\C13_68_crop30_selectiveLP40_relative_prev1next1_no_balance_fixed_AE.json`
+- `experiments\C13_68_crop30_selectiveLP40_relative_prev1next1_no_balance_fixed_AE_confusion.png`
+- Five fold JSON reports (A-E)
+
+---
+
