@@ -85,34 +85,29 @@ class SleepEDFTrack(TrackAdapter):
         return recs
 
     @staticmethod
-    def recording_50hz_ratio(rec):
-        """Median 48-50 Hz / 0.5-50 Hz EEG power ratio."""
+    def epoch_50hz_ratios(rec):
+        """Unfiltered 48-50 Hz / 0.5-50 Hz power fraction per EEG epoch.
+
+        Uses Welch (1024 samples/segment) and trapezoidal PSD integration.
+        This is the C11 selection metric, not a diagnosis of mains interference.
+        """
         from scipy.signal import welch
+        ratios = np.zeros(len(rec.epochs["eeg"]), dtype=float)
+        for i, eeg in enumerate(rec.epochs["eeg"]):
+            freqs, psd = welch(eeg, fs=rec.fs, nperseg=min(1024, len(eeg)))
+            total_mask = (freqs >= 0.5) & (freqs <= 50.0)
+            band_mask = (freqs >= 48.0) & (freqs <= 50.0)
+            total = np.trapezoid(psd[total_mask], freqs[total_mask])
+            band = np.trapezoid(psd[band_mask], freqs[band_mask])
+            ratios[i] = band / total if total > 0 else 0.0
+        return ratios
 
-        ratios = []
+    @staticmethod
+    def recording_50hz_ratio(rec):
+        """Median of per-epoch 50-Hz ratios (descriptive only)."""
+        ratios = SleepEDFTrack.epoch_50hz_ratios(rec)
+        return float(np.median(ratios)) if len(ratios) else 0.0
 
-        for eeg in rec.epochs["eeg"]:
-            freqs, psd = welch(
-                eeg,
-                fs=rec.fs,
-                nperseg=min(1024, len(eeg))
-            )
-
-            total = np.trapezoid(
-                psd[(freqs >= 0.5) & (freqs <= 50)],
-                freqs[(freqs >= 0.5) & (freqs <= 50)]
-            )
-
-            band = np.trapezoid(
-                psd[(freqs >= 48) & (freqs <= 50)],
-                freqs[(freqs >= 48) & (freqs <= 50)]
-            )
-
-            if total > 0:
-                ratios.append(band / total)
-
-        return float(np.median(ratios)) if ratios else 0.0
-    
     # ---- module 2: PREPROCESSING (opt-in; the recipe is your decision) ----
     def preprocess(self, rec: Recording, cfg=None) -> Recording:
         """Identity by default — the supplied baseline scores the epochs as loaded,
@@ -159,21 +154,37 @@ class SleepEDFTrack(TrackAdapter):
         `adapter.bandpass_notch.__doc__` if you ever port this to a live monitor.
         """
         cfg = self._cfg(cfg)
-        # C11: Selective LP40 at recording level
-        if cfg.get("preprocess") == "selective_lp40":
+        # C11 / SEL40: make the decision independently for each 30-s EEG epoch.
+        if str(cfg.get("preprocess", "none")).lower() == "selective_lp40":
             threshold = float(cfg.get("selective_threshold", 0.10))
-            ratio = self.recording_50hz_ratio(rec)
+            ratios = self.epoch_50hz_ratios(rec)  # BEFORE filtering; no labels used
+            selected = ratios >= threshold
+            record_id = rec.meta.get("record", rec.group) if rec.meta else rec.group
+            print(f"{record_id}: LP40 {selected.sum()}/{len(selected)} epochs "
+                  f"({selected.mean():.2%}); median ratio={np.median(ratios):.2%}")
+            if not selected.any():
+                return rec
 
-            if ratio >= threshold:
-                return bandpass_notch(
-                    rec,
-                    band=(None, 40.0),
-                    notch=None,
-                    channels=("eeg",),
-                    causal=False
-                )
+            # Filter only selected EEG epochs using the existing adapter LP40
+            # implementation; preserve all EOG/EMG epochs and labels unchanged.
+            subset = Recording(
+                group=rec.group, fs=rec.fs,
+                epochs={k: v[selected].copy() if k == "eeg" else v[selected]
+                        for k, v in rec.epochs.items()},
+                labels=rec.labels[selected], meta=rec.meta,
+            )
+            filtered = bandpass_notch(
+                subset, band=(None, 40.0), notch=None,
+                channels=("eeg",), causal=False,
+            )
+            eeg_out = rec.epochs["eeg"].copy()
+            eeg_out[selected] = filtered.epochs["eeg"]
+            return Recording(
+                group=rec.group, fs=rec.fs,
+                epochs={**rec.epochs, "eeg": eeg_out},
+                labels=rec.labels, meta=rec.meta,
+            )
 
-            return rec
         how = str(cfg.get("preprocess", "none") or "none").lower()
         chans = cfg.get("filter_channels", ("eeg",))
         if how in ("denoise", "by_noise", "noise"):
@@ -459,7 +470,7 @@ class SleepEDFTrack(TrackAdapter):
         your training data, and only for the final prediction (see HOLDOUT_EVALUATION.md)."""
         return self.download(cache_dir, subset=HOLDOUT_SUBJECTS, include_holdout=True, base_url=base_url)
 
-    def load(self, cache_dir, fs_target=100.0, epoch_s=30.0):
+    def load(self, cache_dir, fs_target=100.0, epoch_s=30.0, only_psg=None):
         """Read Sleep-EDF PSG + Hypnogram pairs into Recordings.
         Groups by SUBJECT (filename 'SC4ss*'-> subject 'SC4ss'), maps R&K->AASM,
         merges S3+S4->N3, drops MOVEMENT/UNKNOWN epochs."""
@@ -469,6 +480,8 @@ class SleepEDFTrack(TrackAdapter):
         # recursive: finds EDFs whether they sit in cache_dir itself or in mne's
         # `physionet-sleep-data/` subfolder.
         psgs = sorted(glob.glob(os.path.join(cache_dir, "**", "*PSG.edf"), recursive=True))
+        if only_psg is not None:
+            psgs = [p for p in psgs if os.path.abspath(p) == os.path.abspath(only_psg)]
         for psg in psgs:
             hyp = psg.replace("-PSG.edf", "-Hypnogram.edf")
             if not os.path.exists(hyp):
