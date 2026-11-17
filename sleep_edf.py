@@ -127,7 +127,33 @@ class SleepEDFTrack(TrackAdapter):
         X_prev[1:][same_rec] = X[:-1][same_rec]
         has_prev[1:][same_rec] = 1.0
         return np.hstack([X, X_prev, has_prev])
-    
+
+    @staticmethod
+    def add_context_epochs(X, recording_ids):
+        """[current | previous + flag | next + flag] within the same recording.
+
+        Uses features only, never labels. Rows must be in time order,
+        one contiguous block per recording. 11 features -> 35.
+        """
+        X = np.asarray(X)
+        recording_ids = np.asarray(recording_ids)
+        n_blocks = 1 + np.sum(recording_ids[1:] != recording_ids[:-1])
+        if n_blocks != len(np.unique(recording_ids)):
+            raise ValueError("recordings are not contiguous; cannot add context")
+
+        same_rec = recording_ids[1:] == recording_ids[:-1]   # rows i and i+1 same night
+
+        X_prev = np.zeros_like(X)
+        has_prev = np.zeros((len(X), 1))
+        X_prev[1:][same_rec] = X[:-1][same_rec]
+        has_prev[1:][same_rec] = 1.0
+
+        X_next = np.zeros_like(X)
+        has_next = np.zeros((len(X), 1))
+        X_next[:-1][same_rec] = X[1:][same_rec]
+        has_next[:-1][same_rec] = 1.0
+
+        return np.hstack([X, X_prev, has_prev, X_next, has_next])
     # ---- module 2: PREPROCESSING (opt-in; the recipe is your decision) ----
     def preprocess(self, rec: Recording, cfg=None) -> Recording:
         """Identity by default — the supplied baseline scores the epochs as loaded,
