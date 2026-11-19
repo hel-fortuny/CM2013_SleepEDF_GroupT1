@@ -127,7 +127,25 @@ class SleepEDFTrack(TrackAdapter):
         X_prev[1:][same_rec] = X[:-1][same_rec]
         has_prev[1:][same_rec] = 1.0
         return np.hstack([X, X_prev, has_prev])
+    @staticmethod
+    def normalize_per_recording(X, recording_ids, eps=1e-12):
+        """Robust per-recording scaling: (x - median) / IQR, per feature, per night.
 
+        Uses each recording's own feature values only (no labels, no other
+        subjects), so it cannot leak across folds.
+        """
+        X = np.asarray(X, dtype=float)
+        recording_ids = np.asarray(recording_ids)
+        Xn = np.empty_like(X)
+        for rec in np.unique(recording_ids):
+            m = recording_ids == rec
+            med = np.median(X[m], axis=0)
+            q75, q25 = np.percentile(X[m], [75, 25], axis=0)
+            iqr = q75 - q25
+            iqr[iqr < eps] = 1.0          # constant feature in this night → only centre it
+            Xn[m] = (X[m] - med) / iqr
+        return Xn
+    
     @staticmethod
     def add_context_epochs(X, recording_ids):
         """[current | previous + flag | next + flag] within the same recording.
