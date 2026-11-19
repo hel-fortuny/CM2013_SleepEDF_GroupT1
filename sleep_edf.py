@@ -172,6 +172,84 @@ class SleepEDFTrack(TrackAdapter):
         has_next[:-1][same_rec] = 1.0
 
         return np.hstack([X, X_prev, has_prev, X_next, has_next])
+
+        # ---- C15: HMM / Viterbi smoothing of the predicted stage sequence ----
+    @staticmethod
+    def _transition_stats(y, recording_ids, idx, classes, alpha=1.0):
+        """Log transition matrix + log start probabilities from TRAINING nights only.
+        Counted on full (uncropped) nights; alpha = add-one smoothing so no transition is impossible."""
+        K = len(classes)
+        pos = {c: i for i, c in enumerate(classes)}
+        trans = np.full((K, K), alpha)
+        start = np.full(K, alpha)
+        for rec in np.unique(recording_ids[idx]):
+            r = np.sort(idx[recording_ids[idx] == rec])
+            s = np.array([pos[v] for v in y[r]])
+            start[s[0]] += 1
+            np.add.at(trans, (s[:-1], s[1:]), 1)
+        trans /= trans.sum(axis=1, keepdims=True)
+        start /= start.sum()
+        return np.log(trans), np.log(start)
+
+    @staticmethod
+    def _viterbi(log_emit, log_trans, log_start):
+        """Most likely state sequence (log domain). log_emit: (T, K)."""
+        T, K = log_emit.shape
+        delta = log_start + log_emit[0]
+        back = np.zeros((T, K), dtype=int)
+        for t in range(1, T):
+            scores = delta[:, None] + log_trans            # (from, to)
+            back[t] = np.argmax(scores, axis=0)
+            delta = scores[back[t], np.arange(K)] + log_emit[t]
+        path = np.empty(T, dtype=int)
+        path[-1] = np.argmax(delta)
+        for t in range(T - 1, 0, -1):
+            path[t - 1] = back[t, path[t]]
+        return path
+
+    def evaluate_hmm(self, X, y, groups, recording_ids, cfg=None, crop_wake_min=None, clf=None):
+        """Same folds/crop/classifier as evaluate(), then Viterbi smoothing per test night.
+        Returns (report_without_hmm, report_with_hmm)."""
+        from sklearn.base import clone
+        from sleep_edf_folds import fixed_sleep_edf_folds
+        from adapter import C, _transform
+
+        cfg = self._cfg(cfg)
+        clf = clf or self._baseline(cfg)
+        X, y = np.asarray(X), np.asarray(y)
+        groups, recording_ids = np.asarray(groups), np.asarray(recording_ids)
+
+        yt, yp_raw, yp_hmm, gg, ff = [], [], [], [], []
+        for k, (tr, te) in enumerate(fixed_sleep_edf_folds(groups)):
+            C.assert_no_subject_leak(groups[tr], groups[te])
+            tr, te = np.asarray(tr), np.sort(np.asarray(te))      # te in time order
+
+            tr_fit = (self.crop_wake_epochs(tr, y, recording_ids, margin_min=crop_wake_min)
+                      if crop_wake_min is not None else tr)
+            sel = self.select_features(X[tr_fit], y[tr_fit], cfg)
+            model = clone(clf).fit(_transform(sel, X[tr_fit]), y[tr_fit])
+            proba = model.predict_proba(_transform(sel, X[te]))
+            cls = np.asarray(model.classes_)
+
+            # HMM parts — training labels only
+            log_trans, log_start = self._transition_stats(y, recording_ids, tr, cls)
+            prior = np.array([np.mean(y[tr_fit] == c) for c in cls])
+            log_emit = np.log(proba + 1e-12) - np.log(prior)        # posterior / prior ∝ likelihood
+
+            raw = cls[np.argmax(proba, axis=1)]
+            smooth = raw.copy()
+            rec_te = recording_ids[te]
+            for rec in np.unique(rec_te):
+                m = rec_te == rec
+                smooth[m] = cls[self._viterbi(log_emit[m], log_trans, log_start)]
+
+            print(f"--- FOLD {k + 1}: changed by HMM {np.mean(smooth != raw):.1%} of test epochs")
+            yt.extend(y[te]); yp_raw.extend(raw); yp_hmm.extend(smooth)
+            gg.extend(groups[te].tolist()); ff.extend([k] * len(te))
+
+        n = len(set(groups.tolist()))
+        return (self._make_report(yt, yp_raw, groups=gg, folds=ff, n_groups=n),
+                self._make_report(yt, yp_hmm, groups=gg, folds=ff, n_groups=n))
     # ---- module 2: PREPROCESSING (opt-in; the recipe is your decision) ----
     def preprocess(self, rec: Recording, cfg=None) -> Recording:
         """Identity by default — the supplied baseline scores the epochs as loaded,
