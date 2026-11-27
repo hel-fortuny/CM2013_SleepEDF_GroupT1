@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "model_id": "CNN1_F2_TRANSFORMER5_FINAL68_seed0",
+  "registration_status": "prepared locally; GitHub commits pending",
+  "repository": "https://github.com/hel-fortuny/CM2013_SleepEDF_GroupT1",
+  "branch": "vincent",
+  "course_revision": "5949b723bbd34d172f072446dfcb802ef54b49f7",
+  "primary_cv_metric": {
+    "name": "cohens_kappa",
+    "mean_across_folds": 0.7787,
+    "sd_across_folds": 0.0174,
+    "n_folds": 5,
+    "split_unit": "subject",
+    "test_scope": "full recordings, including Wake",
+    "source_experiment": "CNN1_F2_TRANSFORMER5_68_fixed_AE",
+    "values_rounded_to_decimal_places": 4
+  },
+  "development": {
+    "n_subjects": 68,
+    "n_recordings": 133,
+    "n_valid_epochs": 360621,
+    "holdout_subjects_excluded": [
+      "SC408",
+      "SC416",
+      "SC424",
+      "SC432",
+      "SC440",
+      "SC448",
+      "SC456",
+      "SC464",
+      "SC472",
+      "SC480"
+    ]
+  },
+  "components": {
+    "cnn": "a701d2e60e2d502f6c6ec90ca22b1f4280ac31781ddc32aabd0c778723d27e1a",
+    "fusion": "d4f2d0ff766db81abf7517ecdfbab2c0acd01ef80dbc929eeae5f0c971aad1b4"
+  },
+  "files": [
+    {
+      "path": "final_model/CNN1_F2_TRANSFORMER5_FINAL68_seed0/cnn_final.pt",
+      "size_bytes": 91230,
+      "sha256": "a701d2e60e2d502f6c6ec90ca22b1f4280ac31781ddc32aabd0c778723d27e1a"
+    },
+    {
+      "path": "final_model/CNN1_F2_TRANSFORMER5_FINAL68_seed0/cnn_final.json",
+      "size_bytes": 3908,
+      "sha256": "c4073dbc632239843efc86c9f7e85747d11fa3185e18865eddc3ae57d1a3b069"
+    },
+    {
+      "path": "final_model/CNN1_F2_TRANSFORMER5_FINAL68_seed0/fusion_final.pt",
+      "size_bytes": 167152,
+      "sha256": "d4f2d0ff766db81abf7517ecdfbab2c0acd01ef80dbc929eeae5f0c971aad1b4"
+    },
+    {
+      "path": "final_model/CNN1_F2_TRANSFORMER5_FINAL68_seed0/fusion_final.json",
+      "size_bytes": 6036,
+      "sha256": "aba6316f2b393013e82ede4702fb99caf6cfd51cdda2ecc8cb83fa40fd033520"
+    },
+    {
+      "path": "final_model/capstone_viggy_v2_final.ipynb",
+      "size_bytes": 5233404,
+      "sha256": "9f3b910ba3018604b7f039fe92da0c5ee1304ef61c9f23fb2fc072ec652886d3"
+    }
+  ],
+  "checks": {
+    "checkpoint_hashes_match_json": true,
+    "fusion_references_verified_cnn": true,
+    "checkpoint_archives_pass_crc_check": true,
+    "development_metadata_consistent": true,
+    "scaler_dimensions_and_samples_consistent": true,
+    "notebook_copied_byte_for_byte": true,
+    "final_training_and_holdout_switches_disabled": true,
+    "saved_notebook_contains_successful_development_checks": true
+  },
+  "verification_limits": "No PyTorch inference was rerun in this workspace; the successful GPU inference and CSV checks are saved outputs from the supplied Colab notebook. No hold-out data were accessed.",
+  "prepared_at_utc": "2026-11-25T19:30:11.928388+00:00"
+}
